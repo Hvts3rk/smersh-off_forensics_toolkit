@@ -4,11 +4,13 @@ import pandas
 from tkinter.filedialog import *
 from tkinter import filedialog
 
+
 def extract_values(kind, file, output):
     pandas.set_option('display.max_rows', 10000)
     pandas.set_option('display.expand_frame_repr', False)
 
     df = pandas.read_csv(file, header=0)
+
     df["timestamp"] = pandas.to_datetime(df["timestamp"])
     df = df.groupby(['IP', pandas.DatetimeIndex(df['timestamp']).day])
 
@@ -21,7 +23,9 @@ def extract_values(kind, file, output):
 
         print "\n Extracted: {}".format(filename)
 
-        each[1].to_csv(output + '\\' + filename + ".csv", index=False)
+        header = ['timestamp', 'IP',  'IP_city_name','farm','request', 'response', 'useragent']
+        each[1].columns = ['timestamp', 'IP',  'IP_city_name','farm','request', 'response', 'useragent']
+        each[1].to_csv(output + '\\' + filename + ".csv", index=False, sep=';')
 
 
 def define_file_name(each, kind):
