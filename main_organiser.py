@@ -5,7 +5,7 @@ from Tkinter import Tk
 from tkinter.filedialog import *
 from tkinter import filedialog
 
-def extract_values(kind, file):
+def extract_values(kind, file, output):
     pandas.set_option('display.max_rows', 10000)
     pandas.set_option('display.expand_frame_repr', False)
 
@@ -16,13 +16,13 @@ def extract_values(kind, file):
     for each in df:
         filename = define_file_name(each, kind)
 
-        # For debug purpose-only
+        #  For debug purpose-only #
         # print each[1].to_csv(index=False)
-        ########################
+        # # # # # # # # # # # # # #
 
         print "\n Extracted: {}".format(filename)
 
-        each[1].to_csv(filename + ".csv", index=False)
+        each[1].to_csv(output + '\\' + filename + ".csv", index=False)
 
 
 def define_file_name(each, kind):
@@ -32,7 +32,7 @@ def define_file_name(each, kind):
     # Ricavo il datetime per il filename
     define_date_day = str(each[1]['timestamp'][0:1]).split(' ')[3]
 
-    return define_ip + '_' + kind + '_' + define_date_day
+    return define_ip.replace('.','_') + '_' + kind + '_' + define_date_day
 
 
 if __name__ == "__main__":
@@ -58,8 +58,8 @@ if __name__ == "__main__":
     file_path = askopenfilename()
     print "\n {}".format(file_path)
 
-    print '\n Choose where to save organised files:\n'
-    save_path = filedialog.askdirectory
+    print '\n Choose where to save organised files:'
+    save_path = filedialog.askdirectory()
     print "\n {}".format(save_path)
 
-    #extract_values(kind[int(choose)].replace(' ', '_'), file_path)
+    extract_values(kind[int(choose)].replace(' ', '_'), file_path, save_path)
