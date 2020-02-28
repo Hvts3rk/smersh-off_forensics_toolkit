@@ -1,8 +1,9 @@
-import pandas
-import os
-from Tkinter import Tk
-from tkinter.filedialog import askopenfilename
+#!/bin/python
 
+import pandas
+from Tkinter import Tk
+from tkinter.filedialog import *
+from tkinter import filedialog
 
 def extract_values(kind, file):
     pandas.set_option('display.max_rows', 10000)
@@ -37,7 +38,7 @@ def define_file_name(each, kind):
 if __name__ == "__main__":
     kind = ['Automated SQL Injection', 'nMap Scanning', 'Manual Vulnerability Probing', 'Automated Vulnerability '
                                                                                         'Probing', 'Spidering Events']
-    print 'Choose attack\'s vector:\n'
+    print '\n Choose attack\'s vector:\n'
     for id, i in enumerate(kind):
         print '{}) {}'.format(id, i)
     choose = raw_input('\n> ')
@@ -53,7 +54,12 @@ if __name__ == "__main__":
         exit(0)
 
     Tk().withdraw()
-    home = os.path.expanduser('~')
-    file_path = askopenfilename(initialdir=home)
+    print '\n Choose what file to open to:'
+    file_path = askopenfilename()
+    print "\n {}".format(file_path)
 
-    extract_values(kind[int(choose)].replace(' ', '_'), file_path)
+    print '\n Choose where to save organised files:\n'
+    save_path = filedialog.askdirectory
+    print "\n {}".format(save_path)
+
+    #extract_values(kind[int(choose)].replace(' ', '_'), file_path)
