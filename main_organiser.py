@@ -1,11 +1,20 @@
 #!/bin/python
 
+'''
+    File name: main_organiser.py
+    Author: Giorgio Rando
+    Date created: 02/2020
+    Date last modified: 06/03/2020
+    Python Version: 2.7
+'''
+
 import pandas
 from tkinter.filedialog import *
-from tkinter import filedialog
+from openpyxl import Workbook
 
 
-def extract_values(kind, file, output):
+
+def extract_values(kind, file, output, mode):
     pandas.set_option('display.max_rows', 10000)
     pandas.set_option('display.expand_frame_repr', False)
 
@@ -23,9 +32,12 @@ def extract_values(kind, file, output):
 
         print "\n Extracted: {}".format(filename)
 
-        header = ['timestamp', 'IP',  'IP_city_name','farm','request', 'response', 'useragent']
         each[1].columns = ['timestamp', 'IP',  'IP_city_name','farm','request', 'response', 'useragent']
-        each[1].to_csv(output + '\\' + filename + ".csv", index=False, sep=';')
+
+        if mode == '0':
+            each[1].to_csv(output + '\\' + filename + ".csv", index=False, sep=';')
+        elif mode == '1':
+            each[1].to_excel(output + '\\' + filename + ".xlsx", index=False)
 
 
 def define_file_name(each, kind):
@@ -44,7 +56,7 @@ if __name__ == "__main__":
     print '\n Choose attack\'s vector:\n'
     for id, i in enumerate(kind):
         print '{}) {}'.format(id, i)
-    choose = raw_input('\n> ')
+    choose = raw_input('\n>> ')
 
     try:
         int(choose)
@@ -56,13 +68,25 @@ if __name__ == "__main__":
         print '\n No correct value!'
         exit(0)
 
+    exports = ['CSV', 'EXCEL']
+    print '\n Choose export\'s type:\n'
+    for id, i in enumerate(exports):
+        print '{}) {}'.format(id, i)
+    mode = raw_input('\n>> ')
+
     Tk().withdraw()
-    print '\n Choose what file to open to:'
+    print '\n Choose what file to open to: \n NB. The output will be written into Desktop\\EstrazioniAggregate\'s folder '
     file_path = askopenfilename()
     print "\n {}".format(file_path)
 
     print '\n Choose where to save organised files:'
-    save_path = filedialog.askdirectory()
+    if os.path.exists('C:\\Users\\randog\\Desktop\\EstrazioniAggregate'):
+        pass
+    else:
+        os.mkdir('C:\\Users\\randog\\Desktop\\EstrazioniAggregate')
+
+    save_path = 'C:\\Users\\randog\\Desktop\\EstrazioniAggregate'
+
     print "\n {}".format(save_path)
 
-    extract_values(kind[int(choose)].replace(' ', '_'), file_path, save_path)
+    extract_values(kind[int(choose)].replace(' ', '_'), file_path, save_path, mode)
