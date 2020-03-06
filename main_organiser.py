@@ -49,6 +49,17 @@ def define_file_name(each, kind):
 
     return define_ip.replace('.','_') + '_' + kind + '_' + define_date_day
 
+def intVerification(val, length):
+    try:
+        int(val)
+        if int(val) > length - 1 or int(val) < 0:
+            exit(0)
+        else:
+            pass
+    except:
+        print '\n No correct value!'
+        exit(0)
+
 
 if __name__ == "__main__":
     kind = ['Automated SQL Injection', 'nMap Scanning', 'Manual Vulnerability Probing', 'Automated Vulnerability '
@@ -58,21 +69,15 @@ if __name__ == "__main__":
         print '{}) {}'.format(id, i)
     choose = raw_input('\n>> ')
 
-    try:
-        int(choose)
-        if int(choose) > len(kind) - 1 or int(choose) < 0:
-            exit(0)
-        else:
-            pass
-    except:
-        print '\n No correct value!'
-        exit(0)
+    intVerification(choose, len(kind))
 
     exports = ['CSV', 'EXCEL']
     print '\n Choose export\'s type:\n'
     for id, i in enumerate(exports):
         print '{}) {}'.format(id, i)
     mode = raw_input('\n>> ')
+
+    intVerification(mode, len(exports))
 
     Tk().withdraw()
     print '\n Choose what file to open to: \n NB. The output will be written into Desktop\\EstrazioniAggregate\'s folder '
