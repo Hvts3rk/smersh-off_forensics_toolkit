@@ -6,12 +6,11 @@
     Date created: 02/2020
     Date last modified: 06/03/2020
     Python Version: 2.7
+    To Do: VERIFICARE TIPO ATTACCO SE PRESENTE + ALLORA COMBINA TIPOLOGIA ATTACCO
 '''
 
 import pandas
 from tkinter.filedialog import *
-from openpyxl import Workbook
-
 
 
 def extract_values(kind, file, output, mode):
@@ -32,7 +31,7 @@ def extract_values(kind, file, output, mode):
 
         print "\n Extracted: {}".format(filename)
 
-        each[1].columns = ['timestamp', 'IP',  'IP_city_name','farm','request', 'response', 'useragent']
+        each[1].columns = ['timestamp', 'IP', 'IP_city_name', 'farm', 'request', 'response', 'useragent']
 
         if mode == '0':
             each[1].to_csv(output + '\\' + filename + ".csv", index=False, sep=';')
@@ -47,7 +46,8 @@ def define_file_name(each, kind):
     # Ricavo il datetime per il filename
     define_date_day = str(each[1]['timestamp'][0:1]).split(' ')[3]
 
-    return define_ip.replace('.','_') + '_' + kind + '_' + define_date_day
+    return define_ip.replace('.', '_') + '_' + kind + '_' + define_date_day
+
 
 def intVerification(val, length):
     try:
