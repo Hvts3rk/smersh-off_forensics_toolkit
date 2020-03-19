@@ -290,8 +290,6 @@ def severity_evaluator():
         if not address3 in address:
             address.append(address3)
 
-    #count_events = len(files_list)
-
     for addr in address:
         for attack in sfondi:
             entity_event = []
