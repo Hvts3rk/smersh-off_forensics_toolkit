@@ -181,6 +181,7 @@ def import_matrix():
     entity = []
     recurency = []
     metrics = []
+    todo = []
 
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_valuator_matrix.txt"
     with open(folder, mode="r") as file:
@@ -194,11 +195,14 @@ def import_matrix():
         elif idx == 1:
             for y in matrix:
                 recurency.append(y.split(','))
-        else:
+        elif idx == 2:
             for y in matrix:
                 metrics.append(y.split(','))
+        else:
+            for y in matrix:
+                todo.append(y)
 
-    return entity, recurency, metrics
+    return entity, recurency, metrics, todo
 
 
 def intVerification(val, length):
@@ -270,17 +274,17 @@ def severity_evaluator():
 
     sfondi = ['SQL', 'nMap', 'Manual', 'Automated', 'Spidering']
 
-    desktop_path = desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+    desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
     gen_path = desktop_path + "\\Estrazioni_Elaborate"
 
     root = Tkinter.Tk()
     filez = tkFileDialog.askopenfilenames(parent=root, title='Scegli i file da analizzare', initialdir=gen_path)
     files_list = root.tk.splitlist(filez)
 
-    entity, recurency, metrics = import_matrix()
+    entity, recurency, metrics, todo = import_matrix()
     count_events = len(files_list)
     response = []
-    kind = ""
+
 
     for attack in sfondi:
         entity_event = []
@@ -305,12 +309,36 @@ def severity_evaluator():
                         elif count_events > int(recurency[idx][1]) and count_events <= int(recurency[idx][2]):
                             response.append(metrics[0][1])
                         elif count_events >= int(recurency[idx][2]):
-                            response.append(metrics[0][1])
+                            response.append(metrics[0][2])
+
+                        if response[0] == metrics[1][0] and response[1] == metrics[0][2]:
+                            action_future = todo[1] + " + " + todo[2]
+
+                        elif response[0] == metrics[1][1] and response[1] == metrics[0][1]:
+                            action_future = todo[1]
+
+                        elif response[0] == metrics[1][1] and response[1] == metrics[0][2]:
+                            action_future = todo[1] + " + " + todo[3]
+
+                        elif response[0] == metrics[1][2] and response[1] == metrics[0][0]:
+                            action_future = todo[1]
+
+                        elif response[0] == metrics[1][2] and response[1] == metrics[0][1]:
+                            action_future = todo[1] + " + " + todo[4]
+
+                        elif response[0] == metrics[1][2] and response[1] == metrics[0][2]:
+                            action_future = todo[1] + " + " + todo[5] + todo[6]
+
+                        else:
+                            action_future = todo[0]
+
                         break
+
                 print "\nValutazione severity evento tipologia '{}': " \
                       "\nEntità: {}" \
                       "\nRicorrenze: {}" \
-                      "\nSeverity: {} | {}".format(attack,entity_event, count_events, response[0], response[1])
+                      "\nSeverity: {} | {}\n" \
+                      "\nContromisura: {}".format(attack,entity_event, count_events, response[0], response[1], action_future)
 
 
 if __name__ == "__main__":
