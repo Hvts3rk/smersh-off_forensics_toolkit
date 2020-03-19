@@ -177,6 +177,30 @@ def define_file_name(each, kind):
     return define_ip.replace('.', '_') + '_' + kind + '_' + define_date_day
 
 
+def import_matrix():
+    entity = []
+    recurency = []
+    metrics = []
+
+    folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_valuator_matrix.txt"
+    with open(folder, mode="r") as file:
+        content = file.read().splitlines()
+
+    for idx, x in enumerate(content):
+        matrix = x.split('|')
+        if idx == 0:
+            for y in matrix:
+                entity.append((y.split(',')))
+        elif idx == 1:
+            for y in matrix:
+                recurency.append(y.split(','))
+        else:
+            for y in matrix:
+                metrics.append(y.split(','))
+
+    return entity, recurency, metrics
+
+
 def intVerification(val, length):
     try:
         int(val)
@@ -241,9 +265,52 @@ def estrattore_dati():
 
 
 def severity_evaluator():
-    # TO DO New Function
-    # Prendi cartella confile, applica policy
-    pass
+    import Tkinter, tkFileDialog
+    import xlrd ## Necessaria per pandas' excel
+
+    sfondi = ['SQL', 'nMap', 'Manual', 'Automated', 'Spidering']
+
+    root = Tkinter.Tk()
+    filez = tkFileDialog.askopenfilenames(parent=root, title='Scegli i file da analizzare')
+    files_list = root.tk.splitlist(filez)
+
+    entity, recurency, metrics = import_matrix()
+    count_events = len(files_list)
+    response = []
+    kind = ""
+
+    for attack in sfondi:
+        entity_event = []
+        for idf, file in enumerate(files_list):
+
+            if attack in file:
+                entity_event.append(len(pandas.read_excel(file)))
+            else:
+                pass
+
+            if attack in file and idf+1 == len(files_list):
+                entity_event = max(entity_event)
+                for idx, x in enumerate(entity):
+                    if x[0] in file:
+                        kind = x[0]
+                        if entity_event < int(x[1]):
+                            response.append(metrics[1][0])
+                        elif entity_event >= int(x[1]) and entity_event < int(x[2]):
+                            response.append(metrics[1][1])
+                        elif entity_event >= int(x[2]):
+                            response.append(metrics[1][2])
+
+                        if count_events <= int(recurency[idx][1]):
+                            response.append(metrics[0][0])
+                        elif count_events > int(recurency[idx][1]) and count_events <= int(recurency[idx][2]):
+                            response.append(metrics[0][1])
+                        elif count_events >= int(recurency[idx][2]):
+                            response.append(metrics[0][1])
+                print "\nValutazione severity evento tipologia '{}': " \
+                      "\nEntità: {}" \
+                      "\nRicorrenze: {}" \
+                      "\nSeverity: {} | {}".format(kind,entity_event, count_events, response[0], response[1])
+
 
 if __name__ == "__main__":
 
@@ -254,5 +321,5 @@ if __name__ == "__main__":
     if action==0:
         estrattore_dati()
     elif action==1:
-        pass
+        severity_evaluator()
 
