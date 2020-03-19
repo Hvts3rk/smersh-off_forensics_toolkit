@@ -270,8 +270,11 @@ def severity_evaluator():
 
     sfondi = ['SQL', 'nMap', 'Manual', 'Automated', 'Spidering']
 
+    desktop_path = desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+    gen_path = desktop_path + "\\Estrazioni_Elaborate"
+
     root = Tkinter.Tk()
-    filez = tkFileDialog.askopenfilenames(parent=root, title='Scegli i file da analizzare')
+    filez = tkFileDialog.askopenfilenames(parent=root, title='Scegli i file da analizzare', initialdir=gen_path)
     files_list = root.tk.splitlist(filez)
 
     entity, recurency, metrics = import_matrix()
@@ -285,14 +288,11 @@ def severity_evaluator():
 
             if attack in file:
                 entity_event.append(len(pandas.read_excel(file)))
-            else:
-                pass
 
-            if attack in file and idf+1 == len(files_list):
+            if idf+1 == len(files_list) and entity_event:
                 entity_event = max(entity_event)
                 for idx, x in enumerate(entity):
-                    if x[0] in file:
-                        kind = x[0]
+                    if x[0] in attack:
                         if entity_event < int(x[1]):
                             response.append(metrics[1][0])
                         elif entity_event >= int(x[1]) and entity_event < int(x[2]):
@@ -306,10 +306,11 @@ def severity_evaluator():
                             response.append(metrics[0][1])
                         elif count_events >= int(recurency[idx][2]):
                             response.append(metrics[0][1])
+                        break
                 print "\nValutazione severity evento tipologia '{}': " \
                       "\nEntità: {}" \
                       "\nRicorrenze: {}" \
-                      "\nSeverity: {} | {}".format(kind,entity_event, count_events, response[0], response[1])
+                      "\nSeverity: {} | {}".format(attack,entity_event, count_events, response[0], response[1])
 
 
 if __name__ == "__main__":
