@@ -2,13 +2,13 @@
 # coding=utf-8
 
 '''
-    File name: smersh_report_orchestrator.py
+    Filename: smersh_report_orchestrator.py
     Author: Giorgio Rando
-    Version: 2.0.2
-    Date created: 02/2020
-    Date last modified: 16/03/2020
-    Python Version: 2.7
-    To Do: VERIFICARE TIPO ATTACCO SE PRESENTE + ALLORA COMBINA TIPOLOGIA ATTACCO; Verificare sintassi input
+    Version: 2.5.7
+    Created: 02/2020
+    Modified: 19/03/2020
+    Python: 2.7
+    ToDo: Check sintassi input
 '''
 
 import pandas
@@ -234,8 +234,8 @@ def estrattore_dati():
     choose = print_action_menu(kind)
 
     exports = ['CSV', 'EXCEL']
-    #print '\n[!] Scegli il tipo di file che vuoi generare:\n'
-    #mode = print_action_menu(exports)
+    # print '\n[!] Scegli il tipo di file che vuoi generare:\n'
+    # mode = print_action_menu(exports)
     mode = 1
 
     modalita_prelevamento = ['FILE LOCALE', 'ESTRAZIONE DAL WEB']
@@ -262,15 +262,13 @@ def estrattore_dati():
         extract_values(kind[choose].replace(' ', '_'), file_path, save_path, mode)
         print "\n[+++] Estrazione completata con Successo!\n"
         subprocess.Popen(r'explorer /select,"' + save_path + '"')
-        raw_input("[i] Premi un tasto qualsiasi per concludere.\n"
-                  "\n >> ")
     except:
         print "[!] Fallito! Qualcosa è andato storto."
 
 
 def severity_evaluator():
     import Tkinter, tkFileDialog
-    import xlrd ## Necessaria per pandas' excel
+    import xlrd  ## Necessaria per pandas' excel
 
     sfondi = ['SQL', 'nMap', 'Manual', 'Automated', 'Spidering']
 
@@ -282,63 +280,79 @@ def severity_evaluator():
     files_list = root.tk.splitlist(filez)
 
     entity, recurency, metrics, todo = import_matrix()
-    count_events = len(files_list)
-    response = []
 
+    address=[]
 
-    for attack in sfondi:
-        entity_event = []
-        for idf, file in enumerate(files_list):
+    for file in files_list:
+        address1 = file.split("/")[5]
+        address2 = address1.split("_")[:4]
+        address3 = "_".join(address2)
+        if not address3 in address:
+            address.append(address3)
 
-            if attack in file:
-                entity_event.append(len(pandas.read_excel(file)))
+    #count_events = len(files_list)
 
-            if idf+1 == len(files_list) and entity_event:
-                entity_event = max(entity_event)
-                for idx, x in enumerate(entity):
-                    if x[0] in attack:
-                        if entity_event < int(x[1]):
-                            response.append(metrics[1][0])
-                        elif entity_event >= int(x[1]) and entity_event < int(x[2]):
-                            response.append(metrics[1][1])
-                        elif entity_event >= int(x[2]):
-                            response.append(metrics[1][2])
+    for addr in address:
+        for attack in sfondi:
+            entity_event = []
+            response = []
+            for idf, file in enumerate(files_list):
 
-                        if count_events <= int(recurency[idx][1]):
-                            response.append(metrics[0][0])
-                        elif count_events > int(recurency[idx][1]) and count_events <= int(recurency[idx][2]):
-                            response.append(metrics[0][1])
-                        elif count_events >= int(recurency[idx][2]):
-                            response.append(metrics[0][2])
+                if attack in file and addr in file:
+                    entity_event.append(len(pandas.read_excel(file)))
 
-                        if response[0] == metrics[1][0] and response[1] == metrics[0][2]:
-                            action_future = todo[1] + " + " + todo[2]
+                if idf + 1 == len(files_list) and entity_event:
+                    entity_event = max(entity_event)
+                    for idx, x in enumerate(entity):
+                        if x[0] in attack:
+                            if entity_event < int(x[1]):
+                                response.append(metrics[1][0])
+                            elif entity_event >= int(x[1]) and entity_event < int(x[2]):
+                                response.append(metrics[1][1])
+                            elif entity_event >= int(x[2]):
+                                response.append(metrics[1][2])
 
-                        elif response[0] == metrics[1][1] and response[1] == metrics[0][1]:
-                            action_future = todo[1]
+                            count_events = 0
+                            for file in files_list:
+                                if addr in file:
+                                    count_events += 1
 
-                        elif response[0] == metrics[1][1] and response[1] == metrics[0][2]:
-                            action_future = todo[1] + " + " + todo[3]
+                            if count_events <= int(recurency[idx][1]):
+                                response.append(metrics[0][0])
+                            elif count_events > int(recurency[idx][1]) and count_events <= int(recurency[idx][2]):
+                                response.append(metrics[0][1])
+                            elif count_events >= int(recurency[idx][2]):
+                                response.append(metrics[0][2])
 
-                        elif response[0] == metrics[1][2] and response[1] == metrics[0][0]:
-                            action_future = todo[1]
+                            if response[0] == metrics[1][0] and response[1] == metrics[0][2]:
+                                action_future = todo[1] + " + " + todo[2]
 
-                        elif response[0] == metrics[1][2] and response[1] == metrics[0][1]:
-                            action_future = todo[1] + " + " + todo[4]
+                            elif response[0] == metrics[1][1] and response[1] == metrics[0][1]:
+                                action_future = todo[1]
 
-                        elif response[0] == metrics[1][2] and response[1] == metrics[0][2]:
-                            action_future = todo[1] + " + " + todo[5] + todo[6]
+                            elif response[0] == metrics[1][1] and response[1] == metrics[0][2]:
+                                action_future = todo[1] + " + " + todo[3]
 
-                        else:
-                            action_future = todo[0]
+                            elif response[0] == metrics[1][2] and response[1] == metrics[0][0]:
+                                action_future = todo[1]
 
-                        break
+                            elif response[0] == metrics[1][2] and response[1] == metrics[0][1]:
+                                action_future = todo[1] + " + " + todo[4]
 
-                print "\nValutazione severity evento tipologia '{}': " \
-                      "\nEntità: {}" \
-                      "\nRicorrenze: {}" \
-                      "\nSeverity: {} | {}\n" \
-                      "\nContromisura: {}".format(attack,entity_event, count_events, response[0], response[1], action_future)
+                            elif response[0] == metrics[1][2] and response[1] == metrics[0][2]:
+                                action_future = todo[1] + " + " + todo[5] + todo[6]
+
+                            else:
+                                action_future = todo[0]
+
+                            break
+
+                    print "\nValutazione severity evento tipologia '{}', IP: {}: " \
+                          "\nEntità: {}" \
+                          "\nRicorrenze: {}" \
+                          "\nSeverity: {} | {}\n" \
+                          "\n    >> Contromisura: {}".format(attack, addr, entity_event, count_events, response[0],
+                                                             response[1], action_future)
 
 
 if __name__ == "__main__":
@@ -347,8 +361,9 @@ if __name__ == "__main__":
     print '\n[*] Menù:\n'
     action = print_action_menu(menu)
 
-    if action==0:
+    if action == 0:
         estrattore_dati()
-    elif action==1:
+    elif action == 1:
         severity_evaluator()
 
+    raw_input("\nPress any button to quit...\n >> _")
