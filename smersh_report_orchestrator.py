@@ -22,7 +22,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 # Funzione per l'estrazione automatica via web dei csv summary
-def estrattore():
+def web_resource_crawler():
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
     with open(folder, mode="r") as file:
         content = file.read().splitlines()
@@ -106,21 +106,23 @@ def estrattore():
 
     if "must not be empty" in r.text or r.text == "":
         if time_type_end == "1":  # Se tempo assoluto
-            print "\nEstrazione vuota! Ricontrollare i parametri:" \
+            print "\nEstrazione vuota! Ricontrollare i parametri (Hai aggiornato il Bearer nel .config?):" \
                   "\n\n IPs: {};" \
                   "\n Timestamp in: {}:{};" \
                   "\n Timestamp out: {}:{};" \
                   "\n URL: {}" \
-                  "\n Campi richiesti: {}.\n".format(ips, date_in, time_in, date_out, time_out, csv_url, fields)
+                  "\n Campi richiesti: {};" \
+                  "\n Estrazione: {}".format(ips, date_in, time_in, date_out, time_out, csv_url, fields, r.text)
 
             raw_input("\nPremi qualsiasi tasto per chiudere.\n>>")
             exit(0)
         else:
-            print "\nEstrazione vuota! Ricontrollare i parametri:" \
+            print "\nEstrazione vuota! Ricontrollare i parametri (Hai aggiornato il Bearer nel .config?):" \
                   "\n\n IPs: {};" \
                   "\n Giorni scanditi: {};" \
                   "\n URL: {}" \
-                  "\n Campi richiesti: {}.\n".format(ips, giorni, csv_url, fields)
+                  "\n Campi richiesti: {};s" \
+                  "\n Estrazione: {}".format(ips, giorni, csv_url, fields, r.text)
 
             raw_input("\nPremi qualsiasi tasto per chiudere.\n>>")
             exit(0)
@@ -181,45 +183,43 @@ def intVerification(val, length):
         if int(val) > length - 1 or int(val) < 0:
             exit(0)
         else:
-            pass
+            return True
     except:
         print '\n No correct value!'
         exit(0)
 
 
-if __name__ == "__main__":
+def print_action_menu(entry):
+    for id, i in enumerate(entry):
+        print '{}) {}'.format(id, i)
+    action = raw_input('\n>> ')
+
+    if intVerification(action, len(entry)):
+        return int(action)
+
+
+def estrattore_dati():
     # Alcuni esempi...
     kind = ['Automated SQL Injection', 'nMap Scanning', 'Manual Vulnerability Probing', 'Automated Vulnerability '
                                                                                         'Probing', 'Spidering Events']
-    print '\n[!] Scegli il vettore d\'attacco:\n'
-    for id, i in enumerate(kind):
-        print '{}) {}'.format(id, i)
-    choose = raw_input('\n>> ')
-
-    intVerification(choose, len(kind))
+    print '\n[*] Scegli il vettore d\'attacco:\n'
+    choose = print_action_menu(kind)
 
     exports = ['CSV', 'EXCEL']
-    print '\n[!] Scegli il tipo di file che vuoi generare:\n'
-    for id, i in enumerate(exports):
-        print '{}) {}'.format(id, i)
-    mode = raw_input('\n>> ')
-
-    intVerification(mode, len(exports))
+    #print '\n[!] Scegli il tipo di file che vuoi generare:\n'
+    #mode = print_action_menu(exports)
+    mode = 1
 
     modalita_prelevamento = ['FILE LOCALE', 'ESTRAZIONE DAL WEB']
-    print '\n[!] Scegli una sorgente dati:\n'
-    for id, i in enumerate(modalita_prelevamento):
-        print '{}) {}'.format(id, i)
-    source = raw_input('\n>> ')
+    print '\n[*] Scegli una sorgente dati (export: {}):\n'.format(exports[mode])
+    source = print_action_menu(modalita_prelevamento)
 
-    intVerification(source, len(modalita_prelevamento))
-
-    if source == "0":
+    if source == 0:
         Tk().withdraw()
         print '\n[!] Scegli quale file aprire: \n'
         file_path = askopenfilename()
     else:
-        file_path = estrattore()
+        file_path = web_resource_crawler()
 
     desktop_path = desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
     save_path = (desktop_path + "\\Estrazioni_Elaborate")
@@ -231,10 +231,28 @@ if __name__ == "__main__":
     print "\n[!] Directory di assemblamento: {}".format(save_path)
 
     try:
-        extract_values(kind[int(choose)].replace(' ', '_'), file_path, save_path, mode)
+        extract_values(kind[choose].replace(' ', '_'), file_path, save_path, mode)
         print "\n[+++] Estrazione completata con Successo!\n"
         subprocess.Popen(r'explorer /select,"' + save_path + '"')
         raw_input("[i] Premi un tasto qualsiasi per concludere.\n"
                   "\n >> ")
     except:
         print "[!] Fallito! Qualcosa è andato storto."
+
+
+def severity_evaluator():
+    # TO DO New Function
+    # Prendi cartella confile, applica policy
+    pass
+
+if __name__ == "__main__":
+
+    menu = ['Estrai Dati', 'Valuta Severity Evento']
+    print '\n[*] Menù:\n'
+    action = print_action_menu(menu)
+
+    if action==0:
+        estrattore_dati()
+    elif action==1:
+        pass
+
