@@ -236,10 +236,10 @@ def estrattore_dati():
     exports = ['CSV', 'EXCEL']
     # print '\n[!] Scegli il tipo di file che vuoi generare:\n'
     # mode = print_action_menu(exports)
-    mode = 1
+    mode = "1"
 
     modalita_prelevamento = ['FILE LOCALE', 'ESTRAZIONE DAL WEB']
-    print '\n[*] Scegli una sorgente dati (export: {}):\n'.format(exports[mode])
+    print '\n[*] Scegli una sorgente dati (export: {}):\n'.format(exports[int(mode)])
     source = print_action_menu(modalita_prelevamento)
 
     if source == 0:
