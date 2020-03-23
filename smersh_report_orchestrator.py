@@ -349,19 +349,26 @@ def severity_evaluator():
                           "\nEntità: {}" \
                           "\nRicorrenze: {}" \
                           "\nSeverity: {} | {}\n" \
-                          "\n    >> Contromisura: {}".format(attack, addr, entity_event, count_events, response[0],
+                          "\n    >> Contromisura: {}".format(attack, addr.replace("_", "."), entity_event, count_events, response[0],
                                                              response[1], action_future)
 
 
 if __name__ == "__main__":
 
-    menu = ['Estrai Dati', 'Valuta Severity Evento']
-    print '\n[*] Menù:\n'
-    action = print_action_menu(menu)
+    while True:
+        menu = ['Estrai Dati', 'Valuta Severity Evento']
+        print '\n[*] Menù:\n'
+        action = print_action_menu(menu)
 
-    if action == 0:
-        estrattore_dati()
-    elif action == 1:
-        severity_evaluator()
+        if action == 0:
+            estrattore_dati()
+        elif action == 1:
+            severity_evaluator()
 
-    raw_input("\nPress any button to quit...\n >> _")
+        op = raw_input("\nDesideri fare qualche altra operazione? [S/n]\n"
+                       "\n>> ")
+        if op == "S" or op == "s":
+            pass
+        else:
+            raw_input("\nPress any button to quit...\n >> ")
+            exit(0)
