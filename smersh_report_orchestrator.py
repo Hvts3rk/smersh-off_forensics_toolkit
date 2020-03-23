@@ -283,6 +283,15 @@ def severity_evaluator():
 
     address=[]
 
+    aggregante = ["Aggrega per IP", "Conto generico"]
+    print '\n[*] Scegli il tipo di aggregazione per il conto degli eventi:\n'
+    conto = print_action_menu(aggregante)
+
+    if conto == "1":
+        pass
+    else:
+        count_events = len(files_list)
+
     for file in files_list:
         address1 = file.split("/")[5]
         address2 = address1.split("_")[:4]
@@ -310,10 +319,13 @@ def severity_evaluator():
                             elif entity_event >= int(x[2]):
                                 response.append(metrics[1][2])
 
-                            count_events = 0
-                            for file in files_list:
-                                if addr in file:
-                                    count_events += 1
+                            if conto == "1":
+                                count_events = 0
+                                for file in files_list:
+                                    if addr in file:
+                                        count_events += 1
+                            else:
+                                pass
 
                             if count_events <= int(recurency[idx][1]):
                                 response.append(metrics[0][0])
