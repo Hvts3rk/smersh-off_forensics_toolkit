@@ -57,7 +57,7 @@ def web_resource_crawler():
                 ip_path += ip.replace('*', '%2A')
 
         time_type = ['RELATIVO (giorni)', 'ASSOLUTO (start-end date)']
-        print '\n Scegli entità temporale desiderata:\n'
+        print u'\n Scegli entità temporale desiderata:\n'
         for id, i in enumerate(time_type):
             print '{}) {}'.format(id, i)
         time_type_end = raw_input('\n>> ')
@@ -263,7 +263,7 @@ def estrattore_dati():
         print "\n[+++] Estrazione completata con Successo!\n"
         subprocess.Popen(r'explorer /select,"' + save_path + '"')
     except:
-        print "[!] Fallito! Qualcosa è andato storto."
+        print u"[!] Fallito! Qualcosa è andato storto."
 
 
 def severity_evaluator():
@@ -350,7 +350,7 @@ def severity_evaluator():
                                 action_future = todo[1] + " + " + todo[4]
 
                             elif response[0] == metrics[1][2] and response[1] == metrics[0][2]:
-                                action_future = todo[1] + " + " + todo[5] + todo[6]
+                                action_future = todo[1] + " + " + todo[5] + " + " +todo[6]
 
                             else:
                                 action_future = todo[0]
@@ -358,7 +358,7 @@ def severity_evaluator():
                             break
 
                     print "\nValutazione severity evento tipologia '{}', IP: {}: " \
-                          "\nEntità: {}" \
+                          u"\nEntità: {}" \
                           "\nRicorrenze: {}" \
                           "\nSeverity: {} | {}\n" \
                           "\n    >> Contromisura: {}".format(attack, addr.replace("_", "."), entity_event, count_events, response[0],
@@ -369,7 +369,7 @@ if __name__ == "__main__":
 
     while True:
         menu = ['Estrai Dati', 'Valuta Severity Evento']
-        print '\n[*] Menù:\n'
+        print u'\n[*] Menù:\n'
         action = print_action_menu(menu)
 
         if action == 0:
