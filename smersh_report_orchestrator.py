@@ -43,8 +43,10 @@ def web_resource_crawler():
         absolute_timestamp_path = "&type=absolute&from=" + date_in + "T" + time_in.replace(":", "%3A") + ".000Z&to=" + \
                                   date_out + "T" + time_out.replace(":", "%3A") + ".000Z"
         stream_path = content[4]
-        fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent"]
-        field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent"
+        #fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent"]
+        #field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent"
+        fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent", "sessionid"]
+        field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent%2Csessionid"
         csv_url = basic_path + csv_path_abs + ips + absolute_timestamp_path + stream_path + field_path
 
     else:
@@ -85,7 +87,8 @@ def web_resource_crawler():
 
         stream_path = content[5]
 
-        fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent"]
+        #fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent"]
+        fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent", "sessionid"]
         field_path = ""
         for idf, field in enumerate(fields):
             if idf > 0:
@@ -159,7 +162,8 @@ def extract_values(kind, file, output, mode):
 
         print "\n[+++] Extracted: {}".format(filename)
 
-        each[1].columns = ['timestamp', 'farm', 'IP', 'IP_city_name', 'request', 'response', 'useragent']
+        #each[1].columns = ['timestamp', 'farm', 'IP', 'IP_city_name', 'request', 'response', 'useragent']
+        each[1].columns = ['timestamp', 'farm', 'IP', 'IP_city_name', 'request', 'response', 'useragent', 'sessionid']
 
         if mode == '0':
             each[1].to_csv(output + '\\' + filename + ".csv", index=False, sep=';')
@@ -263,10 +267,12 @@ def estrattore_dati():
         print "\n[+++] Estrazione completata con Successo!\n"
         subprocess.Popen(r'explorer /select,"' + save_path + '"')
     except:
-        print u"[!] Fallito! Qualcosa è andato storto."
+        print u"[!] Fallito! Qualcosa è andato storto. " \
+              u"\nHai estratto un excel con colonne diverse da quelle di default? [timestamp, farm, IP, IP_city_name, request, response, useragent]"
 
 
 def severity_evaluator():
+    global count_events
     import Tkinter, tkFileDialog
     import xlrd  ## Necessaria per pandas' excel
 
@@ -287,7 +293,7 @@ def severity_evaluator():
     print '\n[*] Scegli il tipo di aggregazione per il conto degli eventi:\n'
     conto = print_action_menu(aggregante)
 
-    if conto == "1":
+    if conto == 0:
         pass
     else:
         count_events = len(files_list)
@@ -319,7 +325,7 @@ def severity_evaluator():
                             elif entity_event >= int(x[2]):
                                 response.append(metrics[1][2])
 
-                            if conto == "1":
+                            if conto == 0:
                                 count_events = 0
                                 for file in files_list:
                                     if addr in file:
