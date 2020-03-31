@@ -6,7 +6,7 @@
     Author: Giorgio Rando
     Version: 2.6.1
     Created: 02/2020
-    Modified: 19/03/2020
+    Modified: 31/03/2020
     Python: 2.7
     ToDo: Check sintassi input
 '''
