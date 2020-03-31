@@ -4,7 +4,7 @@
 '''
     Filename: smersh_report_orchestrator.py
     Author: Giorgio Rando
-    Version: 2.5.7
+    Version: 2.6.1
     Created: 02/2020
     Modified: 19/03/2020
     Python: 2.7
