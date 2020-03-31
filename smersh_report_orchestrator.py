@@ -22,7 +22,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 # Funzione per l'estrazione automatica via web dei csv summary
-def web_resource_crawler():
+def web_resource_crawler(check):
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
     with open(folder, mode="r") as file:
         content = file.read().splitlines()
@@ -31,81 +31,115 @@ def web_resource_crawler():
     csv_path_abs = content[1]
     csv_path_rel = content[2]
 
-    ips = raw_input("\nInserisci IP [multipli separati da ,]: \n\n>> ")
+    if check:
+        bll = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
+        with open(bll, mode="r") as listato:
+            indirizzo = listato.read().splitlines()
 
-    if ips == "DEMO" or ips == "demo":
-        ips = content[3]
-        date_in = "2020-03-16"
-        date_out = date_in
-        time_in = "01:29:00"
-        time_out = "01:35:00"
-        time_type_end = "1"
-        absolute_timestamp_path = "&type=absolute&from=" + date_in + "T" + time_in.replace(":", "%3A") + ".000Z&to=" + \
-                                  date_out + "T" + time_out.replace(":", "%3A") + ".000Z"
+        relative_timestamp_path = "&type=relative&range=86400"
         stream_path = content[4]
-        #fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent"]
-        #field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent"
-        fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent", "sessionid"]
         field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent%2Csessionid"
-        csv_url = basic_path + csv_path_abs + ips + absolute_timestamp_path + stream_path + field_path
+
+        csv_url = []
+
+        for ip in indirizzo:
+            csv_url.append(basic_path + csv_path_rel + ip.replace('*','%2A') + relative_timestamp_path + stream_path + field_path)
 
     else:
-        ips = ips.split(',')
-        ip_path = ""
-        for idi, ip in enumerate(ips):
-            if idi > 0:
-                ip_path += "%20OR%20IP%3A" + ip.replace('*', '%2A')
-            else:
-                ip_path += ip.replace('*', '%2A')
 
-        time_type = ['RELATIVO (giorni)', 'ASSOLUTO (start-end date)']
-        print u'\n Scegli entità temporale desiderata:\n'
-        for id, i in enumerate(time_type):
-            print '{}) {}'.format(id, i)
-        time_type_end = raw_input('\n>> ')
+        ips = raw_input("\nInserisci IP [multipli separati da ,]: \n\n>> ")
 
-        intVerification(time_type_end, len(time_type))
+        if ips == "DEMO" or ips == "demo":
+            ips = content[3]
+            date_in = "2020-03-16"
+            date_out = date_in
+            time_in = "01:29:00"
+            time_out = "01:35:00"
+            absolute_timestamp_path = "&type=absolute&from=" + date_in + "T" + time_in.replace(":", "%3A") + ".000Z&to=" + \
+                                      date_out + "T" + time_out.replace(":", "%3A") + ".000Z"
+            stream_path = content[4]
+            time_type_end = "1"
+            #fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent"]
+            #field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent"
+            fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent", "sessionid"]
+            field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent%2Csessionid"
+            csv_url = basic_path + csv_path_abs + ips + absolute_timestamp_path + stream_path + field_path
 
-        # Se RELATIVO
-        if time_type_end == "1":
-            date_in = raw_input("Inserisci Start Date [Es. 2020-03-16]: \n >> ")
-            time_in = raw_input("Inserisci Start Time [Es. 03:00:00]: \n >> ")
-            date_out = raw_input("Inserisci End Date [Es. 2020-03-16]: \n >> ")
-            time_out = raw_input("Inserisci End Time [Es. 03:00:00]: \n >> ")
-            absolute_timestamp_path = "&type=absolute&from=" + date_in + "T" + time_in.replace(":", "%3A") + ".000Z&to=" \
-                                      + date_out + "T" + time_out.replace(":", "%3A") + ".000Z"
         else:
-            # In un giorno ci sono 86400 secondi, quindi lo moltiplico per il numero di giorni per cui voglio estrarre i dati
-            giorni = raw_input("\nInserisci il numero di giorni da analizzare: \n>> ")
-            try:
-                int(giorni)
-            except:
-                print "Numero di giorni non valido!"
-                exit(1)
-            secondi = 86400 * int(giorni)
-            relative_timestamp_path = "&type=relative&range=" + str(secondi)
+            ips = ips.split(',')
+            ip_path = ""
+            for idi, ip in enumerate(ips):
+                if idi > 0:
+                    ip_path += "%20OR%20IP%3A" + ip.replace('*', '%2A')
+                else:
+                    ip_path += ip.replace('*', '%2A')
 
-        stream_path = content[5]
+            time_type = ['RELATIVO (giorni)', 'ASSOLUTO (start-end date)']
+            print u'\n Scegli entità temporale desiderata:\n'
+            for id, i in enumerate(time_type):
+                print '{}) {}'.format(id, i)
+            time_type_end = raw_input('\n>> ')
 
-        #fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent"]
-        fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent", "sessionid"]
-        field_path = ""
-        for idf, field in enumerate(fields):
-            if idf > 0:
-                field_path += "%2C" + field
+            intVerification(time_type_end, len(time_type))
+
+            # Se Assoluto
+            if time_type_end == "1":
+                date_in = raw_input("Inserisci Start Date [Es. 2020-03-16]: \n >> ")
+                time_in = raw_input("Inserisci Start Time [Es. 03:00:00]: \n >> ")
+                date_out = raw_input("Inserisci End Date [Es. 2020-03-16]: \n >> ")
+                time_out = raw_input("Inserisci End Time [Es. 03:00:00]: \n >> ")
+                absolute_timestamp_path = "&type=absolute&from=" + date_in + "T" + time_in.replace(":", "%3A") + ".000Z&to=" \
+                                          + date_out + "T" + time_out.replace(":", "%3A") + ".000Z"
             else:
-                field_path += field
+                # In un giorno ci sono 86400 secondi, quindi lo moltiplico per il numero di giorni per cui voglio estrarre i dati
+                giorni = raw_input("\nInserisci il numero di giorni da analizzare: \n>> ")
+                try:
+                    int(giorni)
+                except:
+                    print "Numero di giorni non valido!"
+                    exit(1)
+                secondi = 86400 * int(giorni)
+                relative_timestamp_path = "&type=relative&range=" + str(secondi)
 
-        if time_type_end == "1":
-            csv_url = basic_path + csv_path_abs + ip_path + absolute_timestamp_path + stream_path + field_path
-        else:
-            csv_url = basic_path + csv_path_rel + ip_path + relative_timestamp_path + stream_path + field_path
+            stream_path = content[5]
+
+            #fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent"]
+            fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent", "sessionid"]
+            field_path = ""
+            for idf, field in enumerate(fields):
+                if idf > 0:
+                    field_path += "%2C" + field
+                else:
+                    field_path += field
+
+            if time_type_end == "1":
+                csv_url = basic_path + csv_path_abs + ip_path + absolute_timestamp_path + stream_path + field_path
+            else:
+                csv_url = basic_path + csv_path_rel + ip_path + relative_timestamp_path + stream_path + field_path
 
     header = {content[6]: content[7],
               content[8]: content[9],
               "Referer": content[10]}
+    if check:
+        for ide, elem in enumerate(csv_url):
+            address = ""
+            r = requests.get(url=elem, headers=header, verify=False)
+            address = re.findall("[1-9]{1,3}\.(?:\*|[1-9]{1,3}){1,3}\.(?:\*|[1-9]{1,3}){1,3}\.(?:\*|[1-9]{1,3}){1,3}", elem.replace('%2A', '*'))[0]
+            if "must not be empty" in r.text or r.text == "":
 
-    r = requests.get(url=csv_url, headers=header, verify=False)
+                    print "\n[+] Nessuna attività rilevata per: " + address
+
+            else:
+                print "\n[!] Attività rilevata per: " + address
+                exit(0)
+
+            if ide+1 == len(csv_url):
+                raw_input("\nPremi qualsiasi tasto per chiudere:"
+                          "\n> ")
+                exit(0)
+
+    else:
+        r = requests.get(url=csv_url, headers=header, verify=False)
 
     if "must not be empty" in r.text or r.text == "":
         if time_type_end == "1":  # Se tempo assoluto
@@ -251,7 +285,7 @@ def estrattore_dati():
         print '\n[!] Scegli quale file aprire: \n'
         file_path = askopenfilename()
     else:
-        file_path = web_resource_crawler()
+        file_path = web_resource_crawler(False)
 
     desktop_path = desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
     save_path = (desktop_path + "\\Estrazioni_Elaborate")
@@ -370,11 +404,15 @@ def severity_evaluator():
                           "\n    >> Contromisura: {}".format(attack, addr.replace("_", "."), entity_event, count_events, response[0],
                                                              response[1], action_future)
 
+def blacklist_activity():
+    raw_input("\nAggiorna il file di blacklist in /Documents\n"
+              "\nPremi qualsiasi tasto per continuare: >")
+    web_resource_crawler(True)
 
 if __name__ == "__main__":
 
     while True:
-        menu = ['Estrai Dati', 'Valuta Severity Evento']
+        menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Attività Host in Blacklist']
         print u'\n[*] Menù:\n'
         action = print_action_menu(menu)
 
@@ -382,6 +420,9 @@ if __name__ == "__main__":
             estrattore_dati()
         elif action == 1:
             severity_evaluator()
+        elif action == 2:
+            blacklist_activity()
+
 
         op = raw_input("\nDesideri fare qualche altra operazione? [S/n]\n"
                        "\n>> ")
