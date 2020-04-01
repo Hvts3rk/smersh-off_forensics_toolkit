@@ -36,7 +36,7 @@ def web_resource_crawler(check):
         with open(bll, mode="r") as listato:
             indirizzo = listato.read().splitlines()
 
-        relative_timestamp_path = "&type=relative&range=43200" #12 ore
+        relative_timestamp_path = "&type=relative&range=28800" #8 ore
         stream_path = content[4]
         field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent%2Csessionid"
 
@@ -256,7 +256,7 @@ def intVerification(val, length):
 
 def print_action_menu(entry):
     for id, i in enumerate(entry):
-        print u'{}) {}'.format(id, i)
+        print '{}) {}'.format(id, i)
     action = raw_input('\n>> ')
 
     if intVerification(action, len(entry)):
@@ -406,8 +406,9 @@ def severity_evaluator():
 
 
 def blacklist_activity():
-    raw_input("\nAggiorna il file di blacklist in /Documents"
-              "\nPremi qualsiasi tasto per continuare: "
+    raw_input("\n[!] Saranno esaminate le ultime 8 ore. "
+              "\n[!] Aggiorna il file di blacklist in /Documents/.\n"
+              "\n[*] Premi qualsiasi tasto per continuare: \n"
               "\n>> ")
     web_resource_crawler(True)
 
@@ -415,7 +416,7 @@ def blacklist_activity():
 if __name__ == "__main__":
 
     while True:
-        menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Attività Host in Blacklist']
+        menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist']
         print u'\n[*] Menù:\n'
         action = print_action_menu(menu)
 
