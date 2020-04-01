@@ -36,7 +36,7 @@ def web_resource_crawler(check):
         with open(bll, mode="r") as listato:
             indirizzo = listato.read().splitlines()
 
-        relative_timestamp_path = "&type=relative&range=86400"
+        relative_timestamp_path = "&type=relative&range=43200" #12 ore
         stream_path = content[4]
         field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent%2Csessionid"
 
@@ -127,7 +127,7 @@ def web_resource_crawler(check):
         for ide, elem in enumerate(csv_url):
             address = ""
             r = requests.get(url=elem, headers=header, verify=False)
-            address = re.findall("[1-9]{1,3}\.(?:\*|[1-9]{1,3}){1,3}\.(?:\*|[1-9]{1,3}){1,3}\.(?:\*|[1-9]{1,3}){1,3}",
+            address = re.findall(r"[0-9]{1,3}\.(?:\*|[0-9]{1,3})\.(?:\*|[0-9]{1,3})\.(?:\*|[0-9]{1,3})",
                                  elem.replace('%2A', '*'))[0]
             if "must not be empty" in r.text or r.text == "":
                 print u"\n[+] Nessuna attività rilevata per: " + address
@@ -256,7 +256,7 @@ def intVerification(val, length):
 
 def print_action_menu(entry):
     for id, i in enumerate(entry):
-        print '{}) {}'.format(id, i)
+        print u'{}) {}'.format(id, i)
     action = raw_input('\n>> ')
 
     if intVerification(action, len(entry)):
@@ -406,8 +406,9 @@ def severity_evaluator():
 
 
 def blacklist_activity():
-    raw_input("\nAggiorna il file di blacklist in /Documents\n"
-              "\nPremi qualsiasi tasto per continuare: >")
+    raw_input("\nAggiorna il file di blacklist in /Documents"
+              "\nPremi qualsiasi tasto per continuare: "
+              "\n>> ")
     web_resource_crawler(True)
 
 
