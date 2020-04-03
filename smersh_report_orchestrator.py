@@ -8,7 +8,7 @@
     Created: 02/2020
     Modified: 31/03/2020
     Python: 2.7
-    ToDo: Check sintassi input
+    ToDo: Scandire tutto netrange dell'evento rilevato.
 '''
 
 import pandas
@@ -36,7 +36,18 @@ def web_resource_crawler(check):
         with open(bll, mode="r") as listato:
             indirizzo = listato.read().splitlines()
 
-        relative_timestamp_path = "&type=relative&range=28800" #8 ore
+        intervallo = raw_input('\n[!] Aggiorna il file di blacklist in /Documents/.\n'
+                               '\nScegli un intervallo temporale da analizzare [ORE]:\n'
+                               '\n> ')
+
+        try:
+            int(intervallo)
+        except:
+            print "Inserito un valore non valido!"
+            exit(0)
+
+        secondi = 3600 * int(intervallo)
+        relative_timestamp_path = "&type=relative&range="+ str(secondi)
         stream_path = content[4]
         field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent%2Csessionid"
 
@@ -130,7 +141,7 @@ def web_resource_crawler(check):
             address = re.findall(r"[0-9]{1,3}\.(?:\*|[0-9]{1,3})\.(?:\*|[0-9]{1,3})\.(?:\*|[0-9]{1,3})",
                                  elem.replace('%2A', '*'))[0]
             if "must not be empty" in r.text or r.text == "":
-                print u"\n[+] Nessuna attività rilevata per: " + address
+                pass
             else:
                 print u"\n[!] Attività rilevata per: " + address
 
@@ -405,14 +416,6 @@ def severity_evaluator():
                                                              response[1], action_future)
 
 
-def blacklist_activity():
-    raw_input("\n[!] Saranno esaminate le ultime 8 ore. "
-              "\n[!] Aggiorna il file di blacklist in /Documents/.\n"
-              "\n[*] Premi qualsiasi tasto per continuare: \n"
-              "\n>> ")
-    web_resource_crawler(True)
-
-
 if __name__ == "__main__":
 
     while True:
@@ -425,7 +428,7 @@ if __name__ == "__main__":
         elif action == 1:
             severity_evaluator()
         elif action == 2:
-            blacklist_activity()
+            web_resource_crawler(True)
 
         op = raw_input("\nDesideri fare qualche altra operazione? [S/n]\n"
                        "\n>> ")
