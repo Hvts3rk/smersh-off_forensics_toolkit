@@ -4,7 +4,7 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 3.0.0
+    Version: 3.0.1
     Created: 02/2020
     Modified: 06/04/2020
     Python: 2.7
