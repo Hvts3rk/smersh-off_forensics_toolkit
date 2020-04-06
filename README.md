@@ -24,4 +24,4 @@ ____                          _            ___   __  __
 # Smersh-Off Forensics Toolkit
 Toolkit for the automatic excel's predisposition following the alerts given by SMERŠ (SIEM graduation project) and other stuffs.
 
-![Image of Smersh-Off](https://octodex.github.com/images/screen.png)
+![Image of Smersh-Off](https://github.com/Hvts3rk/smersh-off_forensics_toolkit/blob/master/images/screen.png)
