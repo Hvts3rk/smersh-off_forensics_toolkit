@@ -2,27 +2,36 @@
 # coding=utf-8
 
 '''
-    Filename: smersh_report_orchestrator.py
+    Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 2.6.1
+    Version: 3.0.0
     Created: 02/2020
-    Modified: 31/03/2020
+    Modified: 06/04/2020
     Python: 2.7
-    ToDo: Scandire tutto netrange dell'evento rilevato.
+    ToDo: aggiungi indirizzi estratti automaticamente in blacklist, quindi calcola netrange.
 '''
 
+from ipwhois import IPWhois as ipw
+import ThreaderWorker as tw
+import pyfiglet
+import urllib2
 import pandas
 import subprocess
 import requests
 import winreg
 import urllib3
+import getpass
+import pprint
+import re
 from tkinter.filedialog import *
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+verified = []
+
 
 # Funzione per l'estrazione automatica via web dei csv summary
-def web_resource_crawler(check):
+def web_resource_crawler(check=False, provided=False, addr=[]):
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
     with open(folder, mode="r") as file:
         content = file.read().splitlines()
@@ -32,12 +41,16 @@ def web_resource_crawler(check):
     csv_path_rel = content[2]
 
     if check:
-        bll = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
-        with open(bll, mode="r") as listato:
-            indirizzo = listato.read().splitlines()
+        if not provided:
+            print "\n [*] Prelevo IP list da blacklist"
+            bll = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
+            with open(bll, mode="r") as listato:
+                indirizzo = listato.read().splitlines()
 
-        intervallo = raw_input('\n[!] Aggiorna il file di blacklist in /Documents/.\n'
-                               '\nScegli un intervallo temporale da analizzare [ORE]:\n'
+        else:
+            indirizzo = addr
+
+        intervallo = raw_input('\nScegli un intervallo temporale da analizzare [ORE]:\n'
                                '\n> ')
 
         try:
@@ -47,7 +60,7 @@ def web_resource_crawler(check):
             exit(0)
 
         secondi = 3600 * int(intervallo)
-        relative_timestamp_path = "&type=relative&range="+ str(secondi)
+        relative_timestamp_path = "&type=relative&range=" + str(secondi)
         stream_path = content[4]
         field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent%2Csessionid"
 
@@ -134,13 +147,35 @@ def web_resource_crawler(check):
     header = {content[6]: content[7],
               content[8]: content[9],
               "Referer": content[10]}
-    if check:
+
+    # Se devo verificare IP in Blacklist o tutta la sottorete istanzio un multithread
+    if provided:
+        threads_num = 25
+        global verified
+        verified = []
+        threads = []
+        print "\n[*] Processamento IP in corso... " \
+              "\n[*] L'operazione potrebbe richiedere diversi minuti. [premi 's' per status]"
+        for num in range(0, threads_num):
+            thread = tw.multiAddrVerifier("Thread" + str(num), csv_url, header)
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+
+        print "\n[*] Operazione completata con successo!"
+        return None
+
+    elif check:
+
         for ide, elem in enumerate(csv_url):
             address = ""
             r = requests.get(url=elem, headers=header, verify=False)
             address = re.findall(r"[0-9]{1,3}\.(?:\*|[0-9]{1,3})\.(?:\*|[0-9]{1,3})\.(?:\*|[0-9]{1,3})",
                                  elem.replace('%2A', '*'))[0]
             if "must not be empty" in r.text or r.text == "":
+                #print u"\n[***] Nessuna rilevata per: " + address
                 pass
             else:
                 print u"\n[!] Attività rilevata per: " + address
@@ -151,43 +186,44 @@ def web_resource_crawler(check):
     else:
         r = requests.get(url=csv_url, headers=header, verify=False)
 
-    if "must not be empty" in r.text or r.text == "":
-        if time_type_end == "1":  # Se tempo assoluto
-            print "\nEstrazione vuota! Ricontrollare i parametri (Hai aggiornato il Bearer nel .config?):" \
-                  "\n\n IPs: {};" \
-                  "\n Timestamp in: {}:{};" \
-                  "\n Timestamp out: {}:{};" \
-                  "\n URL: {}" \
-                  "\n Campi richiesti: {};" \
-                  "\n Estrazione: {}".format(ips, date_in, time_in, date_out, time_out, csv_url, fields, r.text)
+        if "must not be empty" in r.text or r.text == "":
+            if time_type_end == "1":  # Se tempo assoluto
+                print "\nEstrazione vuota! Ricontrollare i parametri (Hai aggiornato il Bearer nel .config?):" \
+                      "\n\n IPs: {};" \
+                      "\n Timestamp in: {}:{};" \
+                      "\n Timestamp out: {}:{};" \
+                      "\n URL: {}" \
+                      "\n Campi richiesti: {};" \
+                      "\n Estrazione: {}".format(ips, date_in, time_in, date_out, time_out, csv_url, fields, r.text)
 
-            raw_input("\nPremi qualsiasi tasto per chiudere.\n>>")
-            exit(0)
+                raw_input("\nPremi qualsiasi tasto per chiudere.\n>>")
+                exit(0)
+            else:
+                print "\nEstrazione vuota! Ricontrollare i parametri (Hai aggiornato il Bearer nel .config?):" \
+                      "\n\n IPs: {};" \
+                      "\n Giorni scanditi: {};" \
+                      "\n URL: {}" \
+                      "\n Campi richiesti: {};s" \
+                      "\n Estrazione: {}".format(ips, giorni, csv_url, fields, r.text)
+
+                raw_input("\nPremi qualsiasi tasto per chiudere.\n>>")
+                exit(0)
+
         else:
-            print "\nEstrazione vuota! Ricontrollare i parametri (Hai aggiornato il Bearer nel .config?):" \
-                  "\n\n IPs: {};" \
-                  "\n Giorni scanditi: {};" \
-                  "\n URL: {}" \
-                  "\n Campi richiesti: {};s" \
-                  "\n Estrazione: {}".format(ips, giorni, csv_url, fields, r.text)
+            # Ricavo il path per la cartella Downloads
+            sub_key = r'SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'
+            downloads_guid = '{374DE290-123F-4565-9164-39C4925E467B}'
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, sub_key) as key:
+                save_path = winreg.QueryValueEx(key, downloads_guid)[0]
+            # Quindi salvo quanto estratto all'interno del file
+            with open(save_path + '\grabbed.csv', mode="w+") as f:
+                print "\n[+] Dati estratti con Successo! Salvati dentro la cartella 'Downloads'"
+                f.write(r.text)
 
-            raw_input("\nPremi qualsiasi tasto per chiudere.\n>>")
-            exit(0)
-
-    else:
-        # Ricavo il path per la cartella Downloads
-        sub_key = r'SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'
-        downloads_guid = '{374DE290-123F-4565-9164-39C4925E467B}'
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, sub_key) as key:
-            save_path = winreg.QueryValueEx(key, downloads_guid)[0]
-        # Quindi salvo quanto estratto all'interno del file
-        with open(save_path + '\grabbed.csv', mode="w+") as f:
-            print "\n[+] Dati estratti con Successo! Salvati dentro la cartella 'Downloads'"
-            f.write(r.text)
-
-        return save_path + "\grabbed.csv"
+            return save_path + "\grabbed.csv"
 
 
+# Estrattore dei log
 def extract_values(kind, file, output, mode):
     pandas.set_option('display.max_rows', 10000)
     pandas.set_option('display.expand_frame_repr', False)
@@ -215,6 +251,7 @@ def extract_values(kind, file, output, mode):
             each[1].to_excel(output + '\\' + filename + ".xlsx", index=False)
 
 
+# Costruisce il nome del file da esportare
 def define_file_name(each, kind):
     # Ricavo l'IP per il filename
     define_ip = str(each[1]['IP'][0:1]).split(' ')[4].split('\n')[0]
@@ -225,6 +262,7 @@ def define_file_name(each, kind):
     return define_ip.replace('.', '_') + '_' + kind + '_' + define_date_day
 
 
+# Elabora e predispone la matrice di valutazione degli alert
 def import_matrix():
     entity = []
     recurency = []
@@ -253,6 +291,7 @@ def import_matrix():
     return entity, recurency, metrics, todo
 
 
+# Verifica la validità degli input numerici
 def intVerification(val, length):
     try:
         int(val)
@@ -274,6 +313,7 @@ def print_action_menu(entry):
         return int(action)
 
 
+# Funzione per l'estrazione dei dati dai log grezzi alla conversione pulita
 def estrattore_dati():
     # Alcuni esempi...
     kind = ['Automated SQL Injection', 'nMap Scanning', 'Manual Vulnerability Probing', 'Automated Vulnerability '
@@ -295,7 +335,7 @@ def estrattore_dati():
         print '\n[!] Scegli quale file aprire: \n'
         file_path = askopenfilename()
     else:
-        file_path = web_resource_crawler(False)
+        file_path = web_resource_crawler()
 
     desktop_path = desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
     save_path = (desktop_path + "\\Estrazioni_Elaborate")
@@ -315,6 +355,7 @@ def estrattore_dati():
               u"\nHai estratto un excel con colonne diverse da quelle di default? [timestamp, farm, IP, IP_city_name, request, response, useragent]"
 
 
+# Funzione per il calcolo della severity degli eventi estratti in locale
 def severity_evaluator():
     global count_events
     import Tkinter, tkFileDialog
@@ -416,10 +457,147 @@ def severity_evaluator():
                                                              response[1], action_future)
 
 
+# Analizza le sottoreti agli IP indicati per rintracciare eventuale attività annessa
+def subnet_analyser(ranges):
+    sub_ips = []
+
+    for x in ranges:
+        if not "None" in x:
+            netrange = x.replace(" ", "").encode("utf-8").split("-")
+
+            nr1 = netrange[0].split(".")
+            nr1 = [int(x) for x in nr1]
+            nr2 = netrange[1].split(".")
+            nr2 = [int(x) for x in nr2]
+
+            while not (nr1[0] == nr2[0] and nr1[1] == nr2[1] and nr1[2] == nr2[2] and nr1[3] == nr2[3]):
+
+                ipx = ".".join(str(x) for x in nr1)
+                sub_ips.append(ipx)
+
+                if nr1[3] < 255:
+                    nr1[3] += 1
+
+                else:
+                    if nr1[2] < 255:
+                        nr1[3] = 0
+                        nr1[2] += 1
+                    else:
+                        if nr1[1] < 255:
+                            nr1[2] = 0
+                            nr1[1] += 1
+                        else:
+                            nr1[0] += 1
+
+    web_resource_crawler(True, True, sub_ips)
+
+    ''' DEBUG:
+    Print del classico risultato -pero strings- di whois
+    print who.get_whois()
+    '''
+
+# Eseguo una query whois per gli indirizzi specificati in blacklist
+def whois_responder(plot):
+    folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
+    with open(folder, mode="r") as file:
+        content = file.read().splitlines()
+
+    if not plot:
+        print u"\n[!] Avviso: l'estrazione per sottorete risulta essere parecchio lenta ed onerosa. " \
+              u"\n            Si consiglia di effettuare la ricerca attraverso portale WEB prelevando da qui il NetRange." \
+              u"\n Vuoi tornare al menù principale? [S/n]"
+        choose = raw_input(" > ")
+        if choose == "s" or choose == "S":
+            return None
+        else:
+            pass
+
+    ranges = []
+
+    # Set proxy handler
+    u = raw_input("\n[*] Connessione al proxy richiesta, autenticati.\nUser: ")
+    p = getpass.getpass("Password: ")
+
+    handler = urllib2.ProxyHandler({'http': 'http://' + u + ':' + p + '@' + content[11]})
+    opener = urllib2.build_opener(handler)
+
+    source = ['Blacklist File', 'IP Simple List', 'Defined NetRange']
+    print "\n Scegliere la sorgente degli IP (NB. Nessuno deve contenere il carattere * !)"
+    action = print_action_menu(source)
+
+    if action == 0:
+        source = "\\smersh_blacklist.txt"
+    elif action == 1:
+        source = "\\simple_ip_list.txt"
+    elif action ==2:
+        print "[!] TO DO"
+        return None
+        #source = "\\manual_defined_netrange.txt"
+
+    bll = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + source
+    with open(bll, mode="r") as listato:
+        ips = listato.read().splitlines()
+
+    for ip in ips:
+        try:
+            who = ipw(ip, proxy_opener=opener).lookup_rdap()
+        except:
+            print "\n[!] Connessione al proxy fallita, credenziali errate!" \
+                  "\n    Oppure presente un IP che contiene: * "
+            return None
+
+        if plot:
+
+            # Print entire WhoIs result
+            # pp = pprint.PrettyPrinter(indent=8)
+            # pp.pprint(who)
+
+            print "\n [*] IP:\n"
+            print ip
+
+            print "\n [**] Owner:\n"
+            print who["network"]["name"]
+
+            print "\n [**] NetRange:\n"
+            print who["network"]["handle"]
+
+            print "\n [***] Abuse Email:\n"
+            ripe = who["entities"]
+            for x in ripe:
+                try:
+                    print who["objects"][x]["contact"]["email"][0]["value"]
+                except:
+                    pass
+
+            print "\n##### ##### ##### ##### ##### ##### #####"
+
+        else:
+            netrange = who["network"]["handle"]
+            regex = re.compile(r"[0-9]{1,3}\.(?:\*|[0-9]{1,3})\.(?:\*|[0-9]{1,3})\.(?:\*|[0-9]{1,3})")
+            if not regex.match(netrange):
+                ranges.append("None for: {" + ip + "}")
+                print "\n[!] Nessun netrange rilevato per: " + ip
+            else:
+                print "\n[+] Netrange per " + ip + " : " + netrange.encode("utf-8")
+                ranges.append(netrange.encode("utf-8"))
+
+    if plot:
+        return None
+    else:
+        subnet_analyser(ranges)
+
+
 if __name__ == "__main__":
 
+    print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
+    banner = pyfiglet.figlet_format("Smersh-Off \n Forensics Tool")
+    print banner
+    print "              Developed by Giorgio Rando  -  v3.0.1"
+    print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
+
     while True:
-        menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist']
+        menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
+                'Whois Resolver', "Chiudi"]
         print u'\n[*] Menù:\n'
         action = print_action_menu(menu)
 
@@ -429,6 +607,12 @@ if __name__ == "__main__":
             severity_evaluator()
         elif action == 2:
             web_resource_crawler(True)
+        elif action == 3:
+            whois_responder(False)
+        elif action == 4:
+            whois_responder(True)
+        elif action == 5:
+            exit(0)
 
         op = raw_input("\nDesideri fare qualche altra operazione? [S/n]\n"
                        "\n>> ")

@@ -1,3 +1,6 @@
+keyboard
+ipwhois
+pyfiglet
 xlrd
 urllib3
 requests
