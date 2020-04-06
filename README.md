@@ -22,6 +22,17 @@ ____                          _            ___   __  __
 ```
 
 # Smersh-Off Forensics Toolkit
-Toolkit for the automatic excel's predisposition following the alerts given by SMERŠ (SIEM graduation project) and other stuffs.
+Smersh-Off Forensics is an automatic forense toolkit with the aim of personalizing post-detection analysis
+of alerts issued by Smersh (SIEM graduation project). This toolkit consists in a bounch of useful tools
+to assist the SOC Analyst in understanding the entities in place and in the intersection of
+apparently disconnected situations.
+
+## Functions
+
+ * Extract Data
+ * Evaluate Event Severity
+ * Check Host in Blacklist
+ * Check Subnet in Blacklist
+ * Whois Resolver
 
 ![Image of Smersh-Off](https://github.com/Hvts3rk/smersh-off_forensics_toolkit/blob/master/images/screen.png)
