@@ -6,7 +6,7 @@
     Author: Giorgio Rando
     Version: 3.0.1
     Created: 02/2020
-    Modified: 06/04/2020
+    Modified: 07/04/2020
     Python: 2.7
     ToDo: aggiungi indirizzi estratti automaticamente in blacklist, quindi calcola netrange.
 '''
