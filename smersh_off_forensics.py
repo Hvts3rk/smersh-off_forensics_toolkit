@@ -4,7 +4,7 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 3.0.1
+    Version: 3.1.1
     Created: 02/2020
     Modified: 07/04/2020
     Python: 2.7
@@ -589,36 +589,96 @@ def whois_responder(plot):
         subnet_analyser(ranges)
 
 
+# Configuratore pratico per file di config locali
 def confManagement():
-    menu = ['Blacklist Management', 'Update Session Token', "Chiudi"]
-    print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
-    print u'\n[*] Menù:\n'
-    action = print_action_menu(menu)
+    inside = True
 
-    if action == 0:
-        print "\n[!] Under Construction!"
-    elif action == 1:
+    while inside:
 
-        session = raw_input("\n[+] Inserisci il Bearer aggiornato: ")
+        menu = ['Blacklist Management [ADD IP]', 'Blacklist Management [REMOVE IP]', 'Blacklist Management [SHOW IP]',
+                'Update Session Token', "Indietro"]
+        print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
+        print u'\n[*] Menù:\n'
+        action = print_action_menu(menu)
 
-        folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
-        with open(folder, mode="r") as file:
-            content = file.read().splitlines()
+        # Add IP
+        if action == 0:
 
-        content[9] = "Basic " + session
+            add = raw_input("\n[+] Inserisci IP da aggiungere:\n> ")
 
-        try:
-            with open(folder, mode="w") as file:
-                file.write("\n".join(content))
-        except:
-            print "\n[!] Qualcosa è andato storto."
-            return None
+            folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
 
-        print "\n[*] Config file aggiornato con successo!"
-        return None
+            try:
+                with open(folder, mode="a") as file:
+                    file.write("\n" + add)
+            except:
+                print "\n[!] Qualcosa è andato storto!"
+                inside = False
 
-    elif action == 6:
-        exit(0)
+            print "\n[*] Blacklist file aggiornata con successo!"
+
+        # Remove IP
+        elif action == 1:
+
+            folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
+            print "\n"
+
+            with open(folder, mode="r") as file:
+                content = file.read().splitlines()
+                for ida, addr in enumerate(content):
+                    print "{}) {}".format(ida, addr)
+
+            choose = raw_input("\n[+] Scegli l'indice dell'IP da rimuovere:\n> ")
+            try:
+                choose = int(choose)
+            except:
+                print "\n[!] Indice inserito non valido!\n"
+                return None
+
+            content.pop(choose)
+
+            try:
+                with open(folder, mode="w") as file:
+                    file.write("\n".join(content))
+            except:
+                print "\n[!] Qualcosa è andato storto."
+                inside = False
+
+            print "\n[*] Blacklist file aggiornata con successo!"
+
+        # Show IPs
+        elif action == 2:
+
+            folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
+            print "\n"
+
+            with open(folder, mode="r") as file:
+                for ida, addr in enumerate(file.read().splitlines()):
+                    print "{}) {}".format(ida, addr)
+
+        # Bearer Management
+        elif action == 3:
+
+            session = raw_input("\n[+] Inserisci il Bearer aggiornato:\n> ")
+
+            folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
+            with open(folder, mode="r") as file:
+                content = file.read().splitlines()
+
+            content[9] = "Basic " + session
+
+            try:
+                with open(folder, mode="w") as file:
+                    file.write("\n".join(content))
+            except:
+                print "\n[!] Qualcosa è andato storto."
+                return None
+
+            print "\n[*] Config file aggiornato con successo!"
+
+        # Indietro
+        elif action == 4:
+            inside = False
 
 
 if __name__ == "__main__":
@@ -626,7 +686,7 @@ if __name__ == "__main__":
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics Tool")
     print banner
-    print "              Developed by Giorgio Rando  -  v3.0.1"
+    print "              Developed by Giorgio Rando  -  v3.1.1"
 
 
     while 1:
