@@ -42,7 +42,7 @@ def web_resource_crawler(check=False, provided=False, addr=[]):
 
     if check:
         if not provided:
-            print "\n [*] Prelevo IP list da blacklist"
+            print "\n [*] Prelevo IP list da blacklist (ricordati di non lasciare righe vuote!)"
             bll = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
             with open(bll, mode="r") as listato:
                 indirizzo = listato.read().splitlines()
@@ -521,7 +521,7 @@ def whois_responder(plot):
     handler = urllib2.ProxyHandler({'http': 'http://' + u + ':' + p + '@' + content[11]})
     opener = urllib2.build_opener(handler)
 
-    source = ['Blacklist File', 'IP Simple List', 'Defined NetRange']
+    source = ['Blacklist File', 'IP File Simple List', 'Manual IP']
     print "\n Scegliere la sorgente degli IP (NB. Nessuno deve contenere il carattere * !)"
     action = print_action_menu(source)
 
@@ -530,13 +530,15 @@ def whois_responder(plot):
     elif action == 1:
         source = "\\simple_ip_list.txt"
     elif action ==2:
-        print "[!] TO DO"
-        return None
-        #source = "\\manual_defined_netrange.txt"
+        ips = raw_input("\n IP(s) [multipli separati da ,]: ")
 
-    bll = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + source
-    with open(bll, mode="r") as listato:
-        ips = listato.read().splitlines()
+    if not action == 2:
+        bll = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + source
+        with open(bll, mode="r") as listato:
+            ips = listato.read().splitlines()
+
+    else:
+        ips = ips.split(",")
 
     for ip in ips:
         try:
@@ -587,17 +589,50 @@ def whois_responder(plot):
         subnet_analyser(ranges)
 
 
+def confManagement():
+    menu = ['Blacklist Management', 'Update Session Token', "Chiudi"]
+    print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
+    print u'\n[*] Menù:\n'
+    action = print_action_menu(menu)
+
+    if action == 0:
+        print "\n[!] Under Construction!"
+    elif action == 1:
+
+        session = raw_input("\n[+] Inserisci il Bearer aggiornato: ")
+
+        folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
+        with open(folder, mode="r") as file:
+            content = file.read().splitlines()
+
+        content[9] = "Basic " + session
+
+        try:
+            with open(folder, mode="w") as file:
+                file.write("\n".join(content))
+        except:
+            print "\n[!] Qualcosa è andato storto."
+            return None
+
+        print "\n[*] Config file aggiornato con successo!"
+        return None
+
+    elif action == 6:
+        exit(0)
+
+
 if __name__ == "__main__":
 
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics Tool")
     print banner
     print "              Developed by Giorgio Rando  -  v3.0.1"
-    print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
 
-    while True:
+
+    while 1:
         menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
-                'Whois Resolver', "Chiudi"]
+                'Whois Resolver', "Configurazioni", "Chiudi"]
+        print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
         print u'\n[*] Menù:\n'
         action = print_action_menu(menu)
 
@@ -612,12 +647,6 @@ if __name__ == "__main__":
         elif action == 4:
             whois_responder(True)
         elif action == 5:
-            exit(0)
-
-        op = raw_input("\nDesideri fare qualche altra operazione? [S/n]\n"
-                       "\n>> ")
-        if op == "S" or op == "s":
-            pass
-        else:
-            raw_input("\nPress any button to quit...\n >> ")
+            confManagement()
+        elif action == 6:
             exit(0)
