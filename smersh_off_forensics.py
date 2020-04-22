@@ -69,7 +69,7 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller = False, r
     if check:
         # Se devo verificare gli host in blacklist...
         if not provided:
-            print "\n [*] Prelevo IP list da blacklist (ricordati di non lasciare righe vuote!)"
+            #print "\n[*] Prelevo IP list da blacklist (ricordati di non lasciare righe vuote!)"
             bll = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
             with open(bll, mode="r") as listato:
                 indirizzo = listato.read().splitlines()
@@ -86,17 +86,19 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller = False, r
         if not poller:
             intervallo = raw_input('\nScegli un intervallo temporale da analizzare [ORE]:\n'
                                    '\n> ')
+        else:
+            intervallo = 0
 
         try:
             int(intervallo)
         except:
-            print "Inserito un valore non valido!"
+            print "[!] Inserito un valore non valido!"
             return None
-
-        secondi = 3600 * int(intervallo)
 
         if poller:
             secondi = refresh_rate
+        else:
+            secondi = 3600 * int(intervallo)
 
         relative_timestamp_path = "&type=relative&range=" + str(secondi)
         stream_path = content[4]
@@ -782,7 +784,7 @@ if __name__ == "__main__":
             action = print_action_menu(menu)
 
             if action == 0:
-                refresh_rate = raw_input("\n[*] Inserisci un refresh-rate [minuti]:\n"
+                refresh_rate = raw_input("\n[*] Inserisci un refresh-rate [Minuti]:\n"
                                          "\n>> ")
 
                 try:
@@ -791,15 +793,25 @@ if __name__ == "__main__":
                     print "[!] Valore di refresh rate non valido!"
                     break
 
-                print "\n[!] Premere 's' in qualsiasi momento per interrompere il polling.\n"
+                print "\n[!] Premere 'Ctrl + C' in qualsiasi momento per interrompere il polling.\n"
+
+                counter = 1
 
                 while True:
+                    print "\n.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-." \
+                          "\n- Iterazione [{}]:\n".format(counter)
                     web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
 
-                    if keyboard.is_pressed('s'):
+                    try:
+                        # Minuti
+                        time.sleep(int(refresh_rate)*60)
+                        # Secondi
+                        #time.sleep(int(refresh_rate))
+                    except KeyboardInterrupt:
+                        print "[!] Interrotto."
                         break
 
-                    time.sleep(int(refresh_rate)*60)
+                    counter+=1
 
             elif action==1:
                 web_resource_crawler(True)
