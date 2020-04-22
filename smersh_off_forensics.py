@@ -4,14 +4,15 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 3.1.1
+    Version: 3.2.0
     Created: 02/2020
-    Modified: 07/04/2020
+    Modified: 22/04/2020
     Python: 2.7
     ToDo: aggiungi indirizzi estratti automaticamente in blacklist, quindi calcola netrange.
 '''
-
+import keyboard
 from ipwhois import IPWhois as ipw
+from tkinter.filedialog import *
 import ThreaderWorker as tw
 import pyfiglet
 import urllib2
@@ -21,17 +22,42 @@ import requests
 import winreg
 import urllib3
 import getpass
+import time
 import pprint
 import re
-from tkinter.filedialog import *
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 verified = []
 
+# Funzione per l'auto inserimento degli IP in blacklist una volta richiesta l'estrazione.
+def blacklist_auto_updater(ip, label = ""):
+
+    folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
+
+    label = raw_input("\n[*] Inserisci un label per l'IP " + ip + " [lasciare vuoto se desiderato]:\n"
+                                                                  "\n>> ")
+
+    with open(folder, mode='r') as file:
+        content = file.read().splitlines()
+
+    if not ip in content:
+        try:
+            with open(folder, mode="a") as file:
+                if not label:
+                    file.write("\n# [NO LABEL]")
+                else:
+                    # Prevista la possibilità di chiedere all'utente un label
+                    file.write("\n# " + label)
+                file.write("\n" + ip)
+        except:
+            print "[!] Qualcosa è andato storto con l'inserimento dell'indirizzo {}".format(ip)
+
+    print "\n[*] Blacklist file aggiornata con successo!"
+
 
 # Funzione per l'estrazione automatica via web dei csv summary
-def web_resource_crawler(check=False, provided=False, addr=[]):
+def web_resource_crawler(check=False, provided=False, addr=[], poller = False, refresh_rate = 0):
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
     with open(folder, mode="r") as file:
         content = file.read().splitlines()
@@ -41,25 +67,37 @@ def web_resource_crawler(check=False, provided=False, addr=[]):
     csv_path_rel = content[2]
 
     if check:
+        # Se devo verificare gli host in blacklist...
         if not provided:
             print "\n [*] Prelevo IP list da blacklist (ricordati di non lasciare righe vuote!)"
             bll = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
             with open(bll, mode="r") as listato:
                 indirizzo = listato.read().splitlines()
 
+            '''# Pulisco la blacklist dai commenti
+            for idx, x in enumerate(indirizzo):
+                if x.startswith("#"):
+                    del indirizzo[idx]'''
+
+        # Se devo verificare gli host in subnet auto-calcolata...
         else:
             indirizzo = addr
 
-        intervallo = raw_input('\nScegli un intervallo temporale da analizzare [ORE]:\n'
-                               '\n> ')
+        if not poller:
+            intervallo = raw_input('\nScegli un intervallo temporale da analizzare [ORE]:\n'
+                                   '\n> ')
 
         try:
             int(intervallo)
         except:
             print "Inserito un valore non valido!"
-            exit(0)
+            return None
 
         secondi = 3600 * int(intervallo)
+
+        if poller:
+            secondi = refresh_rate
+
         relative_timestamp_path = "&type=relative&range=" + str(secondi)
         stream_path = content[4]
         field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent%2Csessionid"
@@ -67,12 +105,14 @@ def web_resource_crawler(check=False, provided=False, addr=[]):
         csv_url = []
 
         for ip in indirizzo:
-            csv_url.append(
-                basic_path + csv_path_rel + ip.replace('*', '%2A') + relative_timestamp_path + stream_path + field_path)
+            if ip.startswith("#"):
+                pass
+            else:
+                csv_url.append(basic_path + csv_path_rel + ip.replace('*', '%2A') + relative_timestamp_path + stream_path + field_path)
 
     else:
 
-        ips = raw_input("\nInserisci IP [multipli separati da ,]: \n\n>> ")
+        ips = raw_input("\n[*] Inserisci IP [multipli separati da ,]: \n\n>> ")
 
         if ips == "DEMO" or ips == "demo":
             ips = content[3]
@@ -95,13 +135,17 @@ def web_resource_crawler(check=False, provided=False, addr=[]):
             ips = ips.split(',')
             ip_path = ""
             for idi, ip in enumerate(ips):
+
+                # Aggiorna blacklist
+                blacklist_auto_updater(ip)
+
                 if idi > 0:
                     ip_path += "%20OR%20IP%3A" + ip.replace('*', '%2A')
                 else:
                     ip_path += ip.replace('*', '%2A')
 
             time_type = ['RELATIVO (giorni)', 'ASSOLUTO (start-end date)']
-            print u'\n Scegli entità temporale desiderata:\n'
+            print u'\n[*] Scegli entità temporale desiderata:\n'
             for id, i in enumerate(time_type):
                 print '{}) {}'.format(id, i)
             time_type_end = raw_input('\n>> ')
@@ -119,11 +163,12 @@ def web_resource_crawler(check=False, provided=False, addr=[]):
                                           + date_out + "T" + time_out.replace(":", "%3A") + ".000Z"
             else:
                 # In un giorno ci sono 86400 secondi, quindi lo moltiplico per il numero di giorni per cui voglio estrarre i dati
-                giorni = raw_input("\nInserisci il numero di giorni da analizzare: \n>> ")
+                giorni = raw_input("\n[*] Inserisci il numero di giorni da analizzare:\n"
+                                   "\n>> ")
                 try:
                     int(giorni)
                 except:
-                    print "Numero di giorni non valido!"
+                    print "[!] Numero di giorni non valido!"
                     exit(1)
                 secondi = 86400 * int(giorni)
                 relative_timestamp_path = "&type=relative&range=" + str(secondi)
@@ -179,6 +224,14 @@ def web_resource_crawler(check=False, provided=False, addr=[]):
                 pass
             else:
                 print u"\n[!] Attività rilevata per: " + address
+                try:
+                    prec = indirizzo[indirizzo.index(address)-1]
+                    if prec.startswith("#"):
+                        print "   " + indirizzo[indirizzo.index(address)-1]
+                    else:
+                        print "   [!] No label per questo IP!"
+                except:
+                    pass
 
             if ide + 1 == len(csv_url):
                 return None
@@ -327,8 +380,9 @@ def estrattore_dati():
     mode = "1"
 
     modalita_prelevamento = ['FILE LOCALE', 'ESTRAZIONE DAL WEB']
-    print '\n[*] Scegli una sorgente dati (export: {}):\n'.format(exports[int(mode)])
-    source = print_action_menu(modalita_prelevamento)
+    #print '\n[*] Scegli una sorgente dati (export: {}):\n'.format(exports[int(mode)])
+    #source = print_action_menu(modalita_prelevamento)
+    source = "1"
 
     if source == 0:
         Tk().withdraw()
@@ -337,7 +391,7 @@ def estrattore_dati():
     else:
         file_path = web_resource_crawler()
 
-    desktop_path = desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+    desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
     save_path = (desktop_path + "\\Estrazioni_Elaborate")
     if os.path.exists(save_path):
         pass
@@ -537,6 +591,11 @@ def whois_responder(plot):
         with open(bll, mode="r") as listato:
             ips = listato.read().splitlines()
 
+            # Pulisco la blacklist dai commenti
+            for idx, x in enumerate(ips):
+                if x.startswith("#"):
+                    del ips[idx]
+
     else:
         ips = ips.split(",")
 
@@ -605,11 +664,13 @@ def confManagement():
         if action == 0:
 
             add = raw_input("\n[+] Inserisci IP da aggiungere:\n> ")
+            label = raw_input("\n[+] Inserisci label identificato:\n>")
 
             folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
 
             try:
                 with open(folder, mode="a") as file:
+                    file.write("\n#" + label)
                     file.write("\n" + add)
             except:
                 print "\n[!] Qualcosa è andato storto!"
@@ -626,7 +687,10 @@ def confManagement():
             with open(folder, mode="r") as file:
                 content = file.read().splitlines()
                 for ida, addr in enumerate(content):
-                    print "{}) {}".format(ida, addr)
+                    if not addr.startswith("#"):
+                        print "{}) {}".format(ida, addr)
+                    else:
+                        print addr
 
             choose = raw_input("\n[+] Scegli l'indice dell'IP da rimuovere:\n> ")
             try:
@@ -635,7 +699,11 @@ def confManagement():
                 print "\n[!] Indice inserito non valido!\n"
                 return None
 
-            content.pop(choose)
+            # Rimuovo l'IP
+            del content[choose]
+            # Rimuovo il label se presente
+            if content[choose-1].startswith("#"):
+                del content[choose-1]
 
             try:
                 with open(folder, mode="w") as file:
@@ -654,7 +722,10 @@ def confManagement():
 
             with open(folder, mode="r") as file:
                 for ida, addr in enumerate(file.read().splitlines()):
-                    print "{}) {}".format(ida, addr)
+                    if not addr.startswith("#"):
+                        print "{}) {}".format(ida, addr)
+                    else:
+                        print addr
 
         # Bearer Management
         elif action == 3:
@@ -686,7 +757,7 @@ if __name__ == "__main__":
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics Tool")
     print banner
-    print "              Developed by Giorgio Rando  -  v3.1.1"
+    print "              Developed by Giorgio Rando  -  v3.2.0"
 
 
     while 1:
@@ -696,17 +767,55 @@ if __name__ == "__main__":
         print u'\n[*] Menù:\n'
         action = print_action_menu(menu)
 
+        # Estrai Dati
         if action == 0:
             estrattore_dati()
+
+        # Valuta Severity Evento
         elif action == 1:
             severity_evaluator()
+
+        # Verifica host in blacklist
         elif action == 2:
-            web_resource_crawler(True)
+            print "\n"
+            menu = ["Poller", "One-Shot"]
+            action = print_action_menu(menu)
+
+            if action == 0:
+                refresh_rate = raw_input("\n[*] Inserisci un refresh-rate [minuti]:\n"
+                                         "\n>> ")
+
+                try:
+                    int(refresh_rate)
+                except:
+                    print "[!] Valore di refresh rate non valido!"
+                    break
+
+                print "\n[!] Premere 's' in qualsiasi momento per interrompere il polling.\n"
+
+                while True:
+                    web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
+
+                    if keyboard.is_pressed('s'):
+                        break
+
+                    time.sleep(int(refresh_rate)*60)
+
+            elif action==1:
+                web_resource_crawler(True)
+
+        #Verifica Subnet
         elif action == 3:
             whois_responder(False)
+
+        #Whois Resolver
         elif action == 4:
             whois_responder(True)
+
+        # Configurazioni
         elif action == 5:
             confManagement()
+
+        # Chiudi
         elif action == 6:
             exit(0)
