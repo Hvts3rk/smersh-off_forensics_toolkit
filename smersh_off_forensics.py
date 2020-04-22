@@ -4,15 +4,17 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 3.2.0
+    Version: 3.3.0
     Created: 02/2020
     Modified: 22/04/2020
     Python: 2.7
     ToDo: aggiungi indirizzi estratti automaticamente in blacklist, quindi calcola netrange.
 '''
 import keyboard
+from mail_sender import notify_service as nfs
 from ipwhois import IPWhois as ipw
 from tkinter.filedialog import *
+from datetime import datetime
 import ThreaderWorker as tw
 import pyfiglet
 import urllib2
@@ -30,9 +32,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 verified = []
 
-# Funzione per l'auto inserimento degli IP in blacklist una volta richiesta l'estrazione.
-def blacklist_auto_updater(ip, label = ""):
 
+# Funzione per l'auto inserimento degli IP in blacklist una volta richiesta l'estrazione.
+def blacklist_auto_updater(ip, label=""):
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
 
     label = raw_input("\n[*] Inserisci un label per l'IP " + ip + " [lasciare vuoto se desiderato]:\n"
@@ -57,7 +59,7 @@ def blacklist_auto_updater(ip, label = ""):
 
 
 # Funzione per l'estrazione automatica via web dei csv summary
-def web_resource_crawler(check=False, provided=False, addr=[], poller = False, refresh_rate = 0):
+def web_resource_crawler(check=False, provided=False, addr=[], poller=False, refresh_rate=0):
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
     with open(folder, mode="r") as file:
         content = file.read().splitlines()
@@ -69,7 +71,7 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller = False, r
     if check:
         # Se devo verificare gli host in blacklist...
         if not provided:
-            #print "\n[*] Prelevo IP list da blacklist (ricordati di non lasciare righe vuote!)"
+            # print "\n[*] Prelevo IP list da blacklist (ricordati di non lasciare righe vuote!)"
             bll = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
             with open(bll, mode="r") as listato:
                 indirizzo = listato.read().splitlines()
@@ -96,7 +98,7 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller = False, r
             return None
 
         if poller:
-            secondi = refresh_rate
+            secondi = refresh_rate * 60
         else:
             secondi = 3600 * int(intervallo)
 
@@ -110,7 +112,8 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller = False, r
             if ip.startswith("#"):
                 pass
             else:
-                csv_url.append(basic_path + csv_path_rel + ip.replace('*', '%2A') + relative_timestamp_path + stream_path + field_path)
+                csv_url.append(basic_path + csv_path_rel + ip.replace('*',
+                                                                      '%2A') + relative_timestamp_path + stream_path + field_path)
 
     else:
 
@@ -216,27 +219,33 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller = False, r
 
     elif check:
 
+        meta = []
+
         for ide, elem in enumerate(csv_url):
             address = ""
             r = requests.get(url=elem, headers=header, verify=False)
             address = re.findall(r"[0-9]{1,3}\.(?:\*|[0-9]{1,3})\.(?:\*|[0-9]{1,3})\.(?:\*|[0-9]{1,3})",
                                  elem.replace('%2A', '*'))[0]
             if "must not be empty" in r.text or r.text == "":
-                #print u"\n[***] Nessuna rilevata per: " + address
+                # print u"\n[***] Nessuna rilevata per: " + address
                 pass
             else:
+                meta.append(address)
                 print u"\n[!] Attività rilevata per: " + address
                 try:
-                    prec = indirizzo[indirizzo.index(address)-1]
+                    prec = indirizzo[indirizzo.index(address) - 1]
                     if prec.startswith("#"):
-                        print "   " + indirizzo[indirizzo.index(address)-1]
+                        print "   " + indirizzo[indirizzo.index(address) - 1]
                     else:
                         print "   [!] No label per questo IP!"
                 except:
                     pass
 
             if ide + 1 == len(csv_url):
-                return None
+                if poller:
+                    return meta
+                else:
+                    return None
 
     else:
         r = requests.get(url=csv_url, headers=header, verify=False)
@@ -382,8 +391,8 @@ def estrattore_dati():
     mode = "1"
 
     modalita_prelevamento = ['FILE LOCALE', 'ESTRAZIONE DAL WEB']
-    #print '\n[*] Scegli una sorgente dati (export: {}):\n'.format(exports[int(mode)])
-    #source = print_action_menu(modalita_prelevamento)
+    # print '\n[*] Scegli una sorgente dati (export: {}):\n'.format(exports[int(mode)])
+    # source = print_action_menu(modalita_prelevamento)
     source = "1"
 
     if source == 0:
@@ -552,6 +561,7 @@ def subnet_analyser(ranges):
     print who.get_whois()
     '''
 
+
 # Eseguo una query whois per gli indirizzi specificati in blacklist
 def whois_responder(plot):
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
@@ -585,7 +595,7 @@ def whois_responder(plot):
         source = "\\smersh_blacklist.txt"
     elif action == 1:
         source = "\\simple_ip_list.txt"
-    elif action ==2:
+    elif action == 2:
         ips = raw_input("\n IP(s) [multipli separati da ,]: ")
 
     if not action == 2:
@@ -704,8 +714,8 @@ def confManagement():
             # Rimuovo l'IP
             del content[choose]
             # Rimuovo il label se presente
-            if content[choose-1].startswith("#"):
-                del content[choose-1]
+            if content[choose - 1].startswith("#"):
+                del content[choose - 1]
 
             try:
                 with open(folder, mode="w") as file:
@@ -734,7 +744,8 @@ def confManagement():
 
             session = raw_input("\n[+] Inserisci il Bearer aggiornato:\n> ")
 
-            folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
+            folder = os.path.join(os.path.join(os.environ['USERPROFILE']),
+                                  'Documents') + "\\smersh_extractor_keywords.txt"
             with open(folder, mode="r") as file:
                 content = file.read().splitlines()
 
@@ -757,10 +768,9 @@ def confManagement():
 if __name__ == "__main__":
 
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
-    banner = pyfiglet.figlet_format("Smersh-Off \n Forensics Tool")
+    banner = pyfiglet.figlet_format("Smersh-Off \n Forensics ToolKit")
     print banner
-    print "              Developed by Giorgio Rando  -  v3.2.0"
-
+    print "              Developed by Giorgio Rando  -  v3.3.0"
 
     while 1:
         menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
@@ -799,28 +809,35 @@ if __name__ == "__main__":
 
                 while True:
                     print "\n.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-." \
-                          "\n- Iterazione [{}]:\n".format(counter)
-                    web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
+                          "\n[*] {}/{}/{} - {}:{} | Iterazione [{}]:\n".format(datetime.now().day, datetime.now().month,
+                                                                               datetime.now().year, datetime.now().hour,
+                                                                               datetime.now().minute, counter)
+                    res = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
+                    if not res:
+                        print u"   [+] Nessuna attività rilevata"
+                    else:
+                        nfs(refresh_rate, res)
 
                     try:
+                        print "\n   [~] In ascolto..."
                         # Minuti
-                        time.sleep(int(refresh_rate)*60)
+                        time.sleep(int(refresh_rate) * 60)
                         # Secondi
-                        #time.sleep(int(refresh_rate))
+                        # time.sleep(int(refresh_rate))
                     except KeyboardInterrupt:
-                        print "[!] Interrotto."
+                        print "\n-.-.-.-.-.-[!] Interrotto -.-.-.-.-.-\n"
                         break
 
-                    counter+=1
+                    counter += 1
 
-            elif action==1:
+            elif action == 1:
                 web_resource_crawler(True)
 
-        #Verifica Subnet
+        # Verifica Subnet
         elif action == 3:
             whois_responder(False)
 
-        #Whois Resolver
+        # Whois Resolver
         elif action == 4:
             whois_responder(True)
 
