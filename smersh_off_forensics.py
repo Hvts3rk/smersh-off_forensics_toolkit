@@ -4,7 +4,7 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 3.3.1
+    Version: 3.3.2
     Created: 02/2020
     Modified: 22/04/2020
     Python: 2.7
@@ -14,6 +14,7 @@ from mail_sender import notify_service as nfs
 from ipwhois import IPWhois as ipw
 from tkinter.filedialog import *
 from datetime import datetime
+from easygui import *
 import ThreaderWorker as tw
 import pyfiglet
 import urllib2
@@ -769,7 +770,7 @@ if __name__ == "__main__":
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics ToolKit")
     print banner
-    print "              Developed by Giorgio Rando  -  v3.3.1"
+    print "              Developed by Giorgio Rando  -  v3.3.2"
 
     while 1:
         menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
@@ -816,6 +817,9 @@ if __name__ == "__main__":
                         print u"   [+] Nessuna attività rilevata"
                     else:
                         nfs(refresh_rate, res)
+                        title = "[!] SECURITY ALERT [!]"
+                        msg = "Rilevata attività per l'IP: " + ", ".join(res)
+                        msgbox(msg, title, ok_button="Chiudi")
 
                     try:
                         print "\n   [~] In ascolto..."
