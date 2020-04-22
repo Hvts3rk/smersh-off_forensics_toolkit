@@ -4,11 +4,10 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 3.3.0
+    Version: 3.3.1
     Created: 02/2020
     Modified: 22/04/2020
     Python: 2.7
-    ToDo: aggiungi indirizzi estratti automaticamente in blacklist, quindi calcola netrange.
 '''
 import keyboard
 from mail_sender import notify_service as nfs
@@ -231,7 +230,7 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
                 pass
             else:
                 meta.append(address)
-                print u"\n[!] Attività rilevata per: " + address
+                print u"\n   [!] Attività rilevata per: " + address
                 try:
                     prec = indirizzo[indirizzo.index(address) - 1]
                     if prec.startswith("#"):
@@ -675,8 +674,8 @@ def confManagement():
         # Add IP
         if action == 0:
 
-            add = raw_input("\n[+] Inserisci IP da aggiungere:\n> ")
-            label = raw_input("\n[+] Inserisci label identificato:\n>")
+            add = raw_input("\n[+] Inserisci IP da aggiungere:\n  >> ")
+            label = raw_input("\n[+] Inserisci label identificato:\n  >> ")
 
             folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
 
@@ -770,7 +769,7 @@ if __name__ == "__main__":
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics ToolKit")
     print banner
-    print "              Developed by Giorgio Rando  -  v3.3.0"
+    print "              Developed by Giorgio Rando  -  v3.3.1"
 
     while 1:
         menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',

@@ -19,7 +19,7 @@ def notify_service(intervallo, ip):
     try:
         smtpObj = smtplib.SMTP(address)
         smtpObj.sendmail(sender, receivers, message_payload)
-        print "\n[**] Notificate figure interessate!"
+        print "\n   [***] Notificate figure interessate!"
     except smtplib.SMTPException:
         print "\n[!] Error: unable to send email"
 
