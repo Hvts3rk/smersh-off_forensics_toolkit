@@ -41,7 +41,7 @@ apparently disconnected situations.
  ## Usage
  First of all install all required packages: 
  ```
- pip install -r requirements.txt
+ python -m pip install -r requirements.txt
  ```
  Then just... Read the readme file into /res folder. For the applicative documentation and config files contact me:
  [Giorgio Rando](https://www.linkedin.com/in/giorgio-rando-163710b4/)
