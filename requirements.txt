@@ -1,4 +1,3 @@
-keyboard
 ipwhois
 datetime
 pyfiglet
