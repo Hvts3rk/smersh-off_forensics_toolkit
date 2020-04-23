@@ -39,8 +39,11 @@ apparently disconnected situations.
  * Blacklist and Graylist management
  
  ## Usage
- 
- Just... Read the readme file into /res folder. For the applicative documentation and config files contact me:
+ First of all install all required packages: 
+ ```
+ pip install -r requirements.txt
+ ```
+ Then just... Read the readme file into /res folder. For the applicative documentation and config files contact me:
  [Giorgio Rando](https://www.linkedin.com/in/giorgio-rando-163710b4/)
 
 ![Image of Smersh-Off](https://github.com/Hvts3rk/smersh-off_forensics_toolkit/blob/master/images/screen.png)
