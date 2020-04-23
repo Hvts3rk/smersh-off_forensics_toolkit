@@ -4,7 +4,6 @@ datetime
 pyfiglet
 pandas
 requests
-winreg
 urllib3
 getpass
 time
