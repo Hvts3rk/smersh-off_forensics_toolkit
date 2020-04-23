@@ -2,7 +2,6 @@ keyboard
 ipwhois
 datetime
 pyfiglet
-urllib2
 pandas
 subprocess
 requests
