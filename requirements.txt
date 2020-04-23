@@ -1,6 +1,5 @@
 keyboard
 ipwhois
-tkinter
 datetime
 ThreaderWorker
 pyfiglet
