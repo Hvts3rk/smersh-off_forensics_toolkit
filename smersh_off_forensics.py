@@ -10,7 +10,6 @@
     Python: 2.7
     ToDo: un po di colorito non farebbe male! :)
 '''
-import keyboard
 from mail_sender import notify_service as nfs
 from ipwhois import IPWhois as ipw
 from tkinter.filedialog import *
