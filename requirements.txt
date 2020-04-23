@@ -5,3 +5,4 @@ pandas
 requests
 urllib3
 easygui
+keyboard
