@@ -5,10 +5,5 @@ pyfiglet
 pandas
 requests
 urllib3
-getpass
-time
-pprint
-re
 easygui
 smtplib
-os
