@@ -784,88 +784,93 @@ if __name__ == "__main__":
         print u'\n[*] Menù:\n'
         action = print_action_menu(menu)
 
-        # Estrai Dati
-        if action == 0:
-            estrattore_dati()
-
-        # Valuta Severity Evento
-        elif action == 1:
-            severity_evaluator()
-
-        # Verifica host in blacklist
-        elif action == 2:
-            print "\n"
-            menu = ["Poller", "One-Shot"]
-            action = print_action_menu(menu)
-
+        try:
+            # Estrai Dati
             if action == 0:
-                refresh_rate = raw_input("\n[*] Inserisci un refresh-rate [Minuti]:\n"
-                                         "\n>> ")
+                estrattore_dati()
 
-                try:
-                    int(refresh_rate)
-                except:
-                    print "[!] Valore di refresh rate non valido!"
-                    break
+            # Valuta Severity Evento
+            elif action == 1:
+                severity_evaluator()
 
-                print "\n[!] Premere 'Ctrl + C' in qualsiasi momento per interrompere il polling.\n"
+            # Verifica host in blacklist
+            elif action == 2:
+                print "\n"
+                menu = ["Poller", "One-Shot"]
+                action = print_action_menu(menu)
 
-                counter = 1
-
-                while True:
-                    # Scommentare per debug:
-                    '''
-                    print "\n.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-." \
-                          "\n[*] {}/{}/{} - {}:{} | Iterazione [{}]:\n".format(datetime.now().day, datetime.now().month,
-                                                                               datetime.now().year, datetime.now().hour,
-                                                                               datetime.now().minute, counter)
-                    res, labels = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
-                    if not res:
-                        print u"   [+] Nessuna attività rilevata"
-                    else:
-                        nfs(refresh_rate, res, labels)
-                        title = "[!] SECURITY ALERT [!]"
-                        msg = "Rilevata attività per l'IP: {}\nLabel: {}".format(", ".join(res), ", ".join(labels))
-                        msgbox(msg, title, ok_button="Chiudi")'''
-                    # Commentare per abilitare debug
-                    res, labels = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
-                    if res:
-                        nfs(refresh_rate, res, labels)
-                        now = datetime.now()
-                        title = "[!] SECURITY ALERT [!]"
-                        msg = "Rilevata attività per l'IP: {}\n" \
-                              "Label: {}\n" \
-                              "Timestamp: {}".format(", ".join(res), ", ".join(labels), now.strftime("%d/%m/%Y %H:%M:%S"))
-                        msgbox(msg, title, ok_button="Chiudi")
-                    ### ### ### ### ### ### ### ### ### ###
+                if action == 0:
+                    refresh_rate = raw_input("\n[*] Inserisci un refresh-rate [Minuti]:\n"
+                                             "\n>> ")
 
                     try:
-                        print "\n   [~] In ascolto..."
-                        # Minuti
-                        time.sleep(int(refresh_rate) * 60)
-                        # Secondi
-                        # time.sleep(int(refresh_rate))
-                    except KeyboardInterrupt:
-                        print "\n-.-.-.-.-.-[!] Interrotto -.-.-.-.-.-\n"
+                        int(refresh_rate)
+                    except:
+                        print "[!] Valore di refresh rate non valido!"
                         break
 
-                    counter += 1
+                    print "\n[!] Premere 'Ctrl + C' in qualsiasi momento per interrompere il polling.\n"
 
-            elif action == 1:
-                web_resource_crawler(True)
+                    counter = 1
 
-        # Verifica Subnet
-        elif action == 3:
-            whois_responder(False)
+                    while True:
+                        # Scommentare per debug:
+                        '''
+                        print "\n.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-." \
+                              "\n[*] {}/{}/{} - {}:{} | Iterazione [{}]:\n".format(datetime.now().day, datetime.now().month,
+                                                                                   datetime.now().year, datetime.now().hour,
+                                                                                   datetime.now().minute, counter)
+                        res, labels = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
+                        if not res:
+                            print u"   [+] Nessuna attività rilevata"
+                        else:
+                            nfs(refresh_rate, res, labels)
+                            title = "[!] SECURITY ALERT [!]"
+                            msg = "Rilevata attività per l'IP: {}\nLabel: {}".format(", ".join(res), ", ".join(labels))
+                            msgbox(msg, title, ok_button="Chiudi")'''
+                        # Commentare per abilitare debug
+                        res, labels = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
+                        if res:
+                            nfs(refresh_rate, res, labels)
+                            now = datetime.now()
+                            title = "[!] SECURITY ALERT [!]"
+                            msg = "Rilevata attività per l'IP: {}\n" \
+                                  "Label: {}\n" \
+                                  "Timestamp: {}".format(", ".join(res), ", ".join(labels), now.strftime("%d/%m/%Y %H:%M:%S"))
+                            msgbox(msg, title, ok_button="Chiudi")
+                        ### ### ### ### ### ### ### ### ### ###
 
-        # Whois Resolver
-        elif action == 4:
-            whois_responder(True)
+                        try:
+                            print "\n   [~] In ascolto..."
+                            # Minuti
+                            time.sleep(int(refresh_rate) * 60)
+                            # Secondi
+                            # time.sleep(int(refresh_rate))
+                        except KeyboardInterrupt:
+                            print "\n-.-.-.-.-.-[!] Interrotto -.-.-.-.-.-\n"
+                            break
 
-        # Configurazioni
-        elif action == 5:
-            confManagement()
+                        counter += 1
 
-        # Chiudi
-        elif action == 6:
+                elif action == 1:
+                    web_resource_crawler(True)
+
+            # Verifica Subnet
+            elif action == 3:
+                whois_responder(False)
+
+            # Whois Resolver
+            elif action == 4:
+                whois_responder(True)
+
+            # Configurazioni
+            elif action == 5:
+                confManagement()
+
+            # Chiudi
+            elif action == 6:
+                exit(0)
+        except:
+            print "\n[!] Qualcosa è andato storto! Hai configurato correttamente il toolkit?\n"
+            raw_input("\nPremi qualsiasi tasto per concludere:\n  >> ")
             exit(0)
