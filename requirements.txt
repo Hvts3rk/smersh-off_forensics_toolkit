@@ -6,4 +6,3 @@ pandas
 requests
 urllib3
 easygui
-smtplib
