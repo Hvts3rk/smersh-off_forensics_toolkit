@@ -1,7 +1,6 @@
 keyboard
 ipwhois
 datetime
-ThreaderWorker
 pyfiglet
 urllib2
 pandas
