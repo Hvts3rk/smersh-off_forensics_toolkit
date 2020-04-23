@@ -2,7 +2,7 @@ import smtplib
 from datetime import datetime
 import os
 
-def notify_service(intervallo, ip):
+def notify_service(intervallo, ip, labels):
 
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_mail_setting.txt"
     with open(folder, mode="r") as file:
@@ -13,7 +13,7 @@ def notify_service(intervallo, ip):
 
     sender = content[0]
     receivers = content[1].split(',')
-    message_payload = content[2].format(str(intervallo),", ".join(ip),timestamp)
+    message_payload = content[2].format(str(intervallo),", ".join(ip), ", ".join(labels), timestamp)
     address = content[3]
 
     try:

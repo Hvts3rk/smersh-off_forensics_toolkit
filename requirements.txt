@@ -15,3 +15,5 @@ time
 pprint
 re
 easygui
+smtplib
+os

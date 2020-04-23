@@ -4,7 +4,7 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 3.3.2
+    Version: 3.3.3
     Created: 02/2020
     Modified: 22/04/2020
     Python: 2.7
@@ -37,13 +37,12 @@ verified = []
 def blacklist_auto_updater(ip, label=""):
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
 
-    label = raw_input("\n[*] Inserisci un label per l'IP " + ip + " [lasciare vuoto se desiderato]:\n"
-                                                                  "\n>> ")
-
     with open(folder, mode='r') as file:
         content = file.read().splitlines()
 
     if not ip in content:
+        label = raw_input("\n[*] Inserisci un label per l'IP " + ip + " [lasciare vuoto se desiderato]:\n"
+                                                                      "\n>> ")
         try:
             with open(folder, mode="a") as file:
                 if not label:
@@ -52,11 +51,11 @@ def blacklist_auto_updater(ip, label=""):
                     # Prevista la possibilità di chiedere all'utente un label
                     file.write("\n# " + label)
                 file.write("\n" + ip)
+                print "\n[*] Blacklist file aggiornata con successo!"
         except:
             print "[!] Qualcosa è andato storto con l'inserimento dell'indirizzo {}".format(ip)
-
-    print "\n[*] Blacklist file aggiornata con successo!"
-
+    else:
+        print "[!] IP {} già presente in blacklist!".format(ip)
 
 # Funzione per l'estrazione automatica via web dei csv summary
 def web_resource_crawler(check=False, provided=False, addr=[], poller=False, refresh_rate=0):
@@ -219,7 +218,10 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
 
     elif check:
 
+        # Conterrà gli IP rilevati
         meta = []
+        # Conterrà i label degli IP rilevati
+        associated = []
 
         for ide, elem in enumerate(csv_url):
             address = ""
@@ -235,15 +237,17 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
                 try:
                     prec = indirizzo[indirizzo.index(address) - 1]
                     if prec.startswith("#"):
-                        print "   " + indirizzo[indirizzo.index(address) - 1]
+                        associated.append(prec)
+                        print "   " + prec
                     else:
+                        associated.append("[NO LABEL]")
                         print "   [!] No label per questo IP!"
                 except:
                     pass
 
             if ide + 1 == len(csv_url):
                 if poller:
-                    return meta
+                    return meta, associated
                 else:
                     return None
 
@@ -770,11 +774,11 @@ if __name__ == "__main__":
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics ToolKit")
     print banner
-    print "              Developed by Giorgio Rando  -  v3.3.2"
+    print "              Developed by Giorgio Rando  -  v3.3.3"
 
     while 1:
         menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
-                'Whois Resolver', "Configurazioni", "Chiudi"]
+                'Whois Resolver', "Configurazioni", "Chiudi", ".-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-", "Smersh-On Poller [UNDER BUILDING]", "RedMine Report Management [UNDER BUILDING]"]
         print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
         print u'\n[*] Menù:\n'
         action = print_action_menu(menu)
@@ -808,18 +812,31 @@ if __name__ == "__main__":
                 counter = 1
 
                 while True:
+                    # Scommentare per debug:
+                    '''
                     print "\n.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-." \
                           "\n[*] {}/{}/{} - {}:{} | Iterazione [{}]:\n".format(datetime.now().day, datetime.now().month,
                                                                                datetime.now().year, datetime.now().hour,
                                                                                datetime.now().minute, counter)
-                    res = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
+                    res, labels = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
                     if not res:
                         print u"   [+] Nessuna attività rilevata"
                     else:
-                        nfs(refresh_rate, res)
+                        nfs(refresh_rate, res, labels)
                         title = "[!] SECURITY ALERT [!]"
-                        msg = "Rilevata attività per l'IP: " + ", ".join(res)
+                        msg = "Rilevata attività per l'IP: {}\nLabel: {}".format(", ".join(res), ", ".join(labels))
+                        msgbox(msg, title, ok_button="Chiudi")'''
+                    # Commentare per abilitare debug
+                    res, labels = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
+                    if res:
+                        nfs(refresh_rate, res, labels)
+                        now = datetime.now()
+                        title = "[!] SECURITY ALERT [!]"
+                        msg = "Rilevata attività per l'IP: {}\n" \
+                              "Label: {}\n" \
+                              "Timestamp: {}".format(", ".join(res), ", ".join(labels), now.strftime("%d/%m/%Y %H:%M:%S"))
                         msgbox(msg, title, ok_button="Chiudi")
+                    ### ### ### ### ### ### ### ### ### ###
 
                     try:
                         print "\n   [~] In ascolto..."
