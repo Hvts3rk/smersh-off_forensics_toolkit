@@ -21,7 +21,10 @@ import urllib2
 import pandas
 import subprocess
 import requests
-import winreg
+try:
+    import winreg
+except:
+    print "[!] Sembra che tu stia usando SmershOff su Linux!\nLa libreria winreg non sarà importata!"
 import urllib3
 import getpass
 import time
