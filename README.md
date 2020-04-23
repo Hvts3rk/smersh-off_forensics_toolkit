@@ -29,10 +29,18 @@ apparently disconnected situations.
 
 ## Functions
 
- * Extract Data
- * Evaluate Event Severity
- * Check Host in Blacklist
- * Check Subnet in Blacklist
+ * Extract data from Log Manager
+ * Evaluate events severity
+ * Check Graylist/Blacklist hosts activity
+   * Polling Mode
+   * One-Shot Mode
+ * Check subnet in Blacklist
  * Whois Resolver
+ * Blacklist and Graylist management
+ 
+ ## Usage
+ 
+ Just... Read the readme file into /res folder. For the applicative documentation and config files contact me:
+ [Giorgio Rando](https://www.linkedin.com/in/giorgio-rando-163710b4/)
 
 ![Image of Smersh-Off](https://github.com/Hvts3rk/smersh-off_forensics_toolkit/blob/master/images/screen.png)

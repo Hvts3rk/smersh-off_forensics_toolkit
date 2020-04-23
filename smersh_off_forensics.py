@@ -8,6 +8,7 @@
     Created: 02/2020
     Modified: 22/04/2020
     Python: 2.7
+    ToDo: un po di colorito non farebbe male! :)
 '''
 import keyboard
 from mail_sender import notify_service as nfs
