@@ -3,7 +3,6 @@ ipwhois
 datetime
 pyfiglet
 pandas
-subprocess
 requests
 winreg
 urllib3
