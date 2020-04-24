@@ -29,6 +29,10 @@ apparently disconnected situations.
 
 ## Functions
 
+ * Automatic Online Poller 
+   * Auto email sending on alert
+   * Auto report organization on alert
+   * Auto blacklist management
  * Extract data from Log Manager
  * Evaluate events severity
  * Check Graylist/Blacklist hosts activity
