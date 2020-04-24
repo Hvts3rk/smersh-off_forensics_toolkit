@@ -4,12 +4,13 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 3.3.3
+    Version: 4.0.0
     Created: 02/2020
-    Modified: 22/04/2020
+    Modified: 24/04/2020
     Python: 2.7
     ToDo: un po di colorito non farebbe male! :)
 '''
+from online_smersh_poller import online_poller as op
 from mail_sender import notify_service as nfs
 from ipwhois import IPWhois as ipw
 from tkinter.filedialog import *
@@ -35,9 +36,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 verified = []
 
-
 # Funzione per l'auto inserimento degli IP in blacklist una volta richiesta l'estrazione.
-def blacklist_auto_updater(ip, label=""):
+def blacklist_auto_updater(ip, label="", verbose=True):
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
 
     with open(folder, mode='r') as file:
@@ -58,10 +58,11 @@ def blacklist_auto_updater(ip, label=""):
         except:
             print "[!] Qualcosa è andato storto con l'inserimento dell'indirizzo {}".format(ip)
     else:
-        print "[!] IP {} già presente in blacklist!".format(ip)
+        if verbose:
+            print "\n[!] IP {} già presente in blacklist!".format(ip)
 
 # Funzione per l'estrazione automatica via web dei csv summary
-def web_resource_crawler(check=False, provided=False, addr=[], poller=False, refresh_rate=0):
+def web_resource_crawler(check=False, provided=False, addr=[], poller=False, refresh_rate=0, ips="", time_type_end="", defined_seconds=None, verbose=True):
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
     with open(folder, mode="r") as file:
         content = file.read().splitlines()
@@ -118,8 +119,8 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
                                                                       '%2A') + relative_timestamp_path + stream_path + field_path)
 
     else:
-
-        ips = raw_input("\n[*] Inserisci IP [multipli separati da ,]: \n\n>> ")
+        if not ips:
+            ips = raw_input("\n[*] Inserisci IP [multipli separati da ,]: \n\n>> ")
 
         if ips == "DEMO" or ips == "demo":
             ips = content[3]
@@ -137,14 +138,13 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
             fields = ["timestamp", "farm", "IP", "IP_city_name", "request", "response", "useragent", "sessionid"]
             field_path = "timestamp%2Cfarm%2CIP%2CIP_city_name%2Crequest%2Cresponse%2Cuseragent%2Csessionid"
             csv_url = basic_path + csv_path_abs + ips + absolute_timestamp_path + stream_path + field_path
-
         else:
             ips = ips.split(',')
             ip_path = ""
             for idi, ip in enumerate(ips):
 
                 # Aggiorna blacklist
-                blacklist_auto_updater(ip)
+                blacklist_auto_updater(ip, verbose=verbose)
 
                 if idi > 0:
                     ip_path += "%20OR%20IP%3A" + ip.replace('*', '%2A')
@@ -152,12 +152,12 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
                     ip_path += ip.replace('*', '%2A')
 
             time_type = ['RELATIVO (giorni)', 'ASSOLUTO (start-end date)']
-            print u'\n[*] Scegli entità temporale desiderata:\n'
-            for id, i in enumerate(time_type):
-                print '{}) {}'.format(id, i)
-            time_type_end = raw_input('\n>> ')
-
-            intVerification(time_type_end, len(time_type))
+            if not time_type_end:
+                print u'\n[*] Scegli entità temporale desiderata:\n'
+                for id, i in enumerate(time_type):
+                    print '{}) {}'.format(id, i)
+                time_type_end = raw_input('\n>> ')
+                intVerification(time_type_end, len(time_type))
 
             # Se Assoluto
             if time_type_end == "1":
@@ -169,15 +169,18 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
                                                                                                    "%3A") + ".000Z&to=" \
                                           + date_out + "T" + time_out.replace(":", "%3A") + ".000Z"
             else:
-                # In un giorno ci sono 86400 secondi, quindi lo moltiplico per il numero di giorni per cui voglio estrarre i dati
-                giorni = raw_input("\n[*] Inserisci il numero di giorni da analizzare:\n"
-                                   "\n>> ")
-                try:
-                    int(giorni)
-                except:
-                    print "[!] Numero di giorni non valido!"
-                    exit(1)
-                secondi = 86400 * int(giorni)
+                if not defined_seconds:
+                    # In un giorno ci sono 86400 secondi, quindi lo moltiplico per il numero di giorni per cui voglio estrarre i dati
+                    giorni = raw_input("\n[*] Inserisci il numero di giorni da analizzare:\n"
+                                       "\n>> ")
+                    try:
+                        int(giorni)
+                    except:
+                        print "[!] Numero di giorni non valido!"
+                        exit(1)
+                    secondi = 86400 * int(giorni)
+                else:
+                    secondi = defined_seconds
                 relative_timestamp_path = "&type=relative&range=" + str(secondi)
 
             stream_path = content[5]
@@ -222,9 +225,9 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
     elif check:
 
         # Conterrà gli IP rilevati
-        meta = []
+        indirizzi = []
         # Conterrà i label degli IP rilevati
-        associated = []
+        labels_associati = []
 
         for ide, elem in enumerate(csv_url):
             address = ""
@@ -235,22 +238,22 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
                 # print u"\n[***] Nessuna rilevata per: " + address
                 pass
             else:
-                meta.append(address)
+                indirizzi.append(address)
                 print u"\n   [!] Attività rilevata per: " + address
                 try:
                     prec = indirizzo[indirizzo.index(address) - 1]
                     if prec.startswith("#"):
-                        associated.append(prec)
+                        labels_associati.append(prec)
                         print "   " + prec
                     else:
-                        associated.append("[NO LABEL]")
+                        labels_associati.append("[NO LABEL]")
                         print "   [!] No label per questo IP!"
                 except:
                     pass
 
             if ide + 1 == len(csv_url):
                 if poller:
-                    return meta, associated
+                    return indirizzi, labels_associati
                 else:
                     return None
 
@@ -288,14 +291,14 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
                 save_path = winreg.QueryValueEx(key, downloads_guid)[0]
             # Quindi salvo quanto estratto all'interno del file
             with open(save_path + '\grabbed.csv', mode="w+") as f:
-                print "\n[+] Dati estratti con Successo! Salvati dentro la cartella 'Downloads'"
+                #print "\n[+] Dati estratti con Successo! Salvati dentro la cartella 'Downloads'"
                 f.write(r.text)
 
             return save_path + "\grabbed.csv"
 
 
 # Estrattore dei log
-def extract_values(kind, file, output, mode):
+def extract_values(kind, file, output, mode, verbose = True):
     pandas.set_option('display.max_rows', 10000)
     pandas.set_option('display.expand_frame_repr', False)
 
@@ -311,7 +314,8 @@ def extract_values(kind, file, output, mode):
         # print each[1].to_csv(index=False)
         # # # # # # # # # # # # # #
 
-        print "\n[+++] Extracted: {}".format(filename)
+        if verbose:
+            print "\n[+++] Extracted: {}".format(filename)
 
         # each[1].columns = ['timestamp', 'farm', 'IP', 'IP_city_name', 'request', 'response', 'useragent']
         each[1].columns = ['timestamp', 'farm', 'IP', 'IP_city_name', 'request', 'response', 'useragent', 'sessionid']
@@ -385,12 +389,16 @@ def print_action_menu(entry):
 
 
 # Funzione per l'estrazione dei dati dai log grezzi alla conversione pulita
-def estrattore_dati():
-    # Alcuni esempi...
+def estrattore_dati(choose="",ips="", intervallo=None, verbose=True):
+
     kind = ['Automated SQL Injection', 'nMap Scanning', 'Manual Vulnerability Probing', 'Automated Vulnerability '
-                                                                                        'Probing', 'Spidering Events']
-    print '\n[*] Scegli il vettore d\'attacco:\n'
-    choose = print_action_menu(kind)
+                                                                                        'Probing', 'Spidering Events',
+            '[AUTO-GENERATED-REPORT]']
+
+    if not choose:
+        print '\n[*] Scegli il vettore d\'attacco:\n'
+        choose = print_action_menu(kind)
+
 
     exports = ['CSV', 'EXCEL']
     # print '\n[!] Scegli il tipo di file che vuoi generare:\n'
@@ -407,7 +415,8 @@ def estrattore_dati():
         print '\n[!] Scegli quale file aprire: \n'
         file_path = askopenfilename()
     else:
-        file_path = web_resource_crawler()
+        ########## Preleva il file da Graylog!
+        file_path = web_resource_crawler(ips=ips, time_type_end="0", defined_seconds=intervallo, verbose=verbose)
 
     desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
     save_path = (desktop_path + "\\Estrazioni_Elaborate")
@@ -416,15 +425,19 @@ def estrattore_dati():
     else:
         os.mkdir(save_path)
 
-    print "\n[!] Directory di assemblamento: {}".format(save_path)
+    if verbose:
+        print "\n[!] Directory di assemblamento: {}".format(save_path)
 
-    try:
-        extract_values(kind[choose].replace(' ', '_'), file_path, save_path, mode)
+    #try:
+    extract_values(kind[int(choose)].replace(' ', '_'), file_path, save_path, mode, verbose=verbose)
+
+    if verbose:
         print "\n[+++] Estrazione completata con Successo!\n"
         subprocess.Popen(r'explorer /select,"' + save_path + '"')
-    except:
-        print u"[!] Fallito! Qualcosa è andato storto. " \
-              u"\nHai estratto un excel con colonne diverse da quelle di default? [timestamp, farm, IP, IP_city_name, request, response, useragent]"
+
+    #except:
+        #print u"[!] Fallito! Qualcosa è andato storto. " \
+              #u"\nHai estratto un excel con colonne diverse da quelle di default? [timestamp, farm, IP, IP_city_name, request, response, useragent]"
 
 
 # Funzione per il calcolo della severity degli eventi estratti in locale
@@ -777,33 +790,46 @@ if __name__ == "__main__":
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics ToolKit")
     print banner
-    print "              Developed by Giorgio Rando  -  v3.3.3"
+    print "              Developed by Giorgio Rando  -  v4.0.0"
 
     while 1:
-        menu = ['Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
-                'Whois Resolver', "Configurazioni", "Chiudi", ".-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-", "Smersh-On Poller [UNDER BUILDING]", "RedMine Report Management [UNDER BUILDING]"]
+        menu = ["Smersh-On Poller", 'Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
+                'Whois Resolver', "Configurazioni", "Chiudi", ".-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-", "RedMine Report Management [UNDER BUILDING]"]
         print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
         print u'\n[*] Menù:\n'
         action = print_action_menu(menu)
 
         try:
+            # Polling di verifica filtri su Smersh-Online
+            if action ==0:
+                print("\n[*] Refresh-rate fisso a 15 minuti!\n")
+                refresh_rate = 15
+
+                try:
+                    int(refresh_rate)
+                except:
+                    print "[!] Valore di refresh rate non valido!"
+                    break
+
+                ips = op(refresh_rate)
+
             # Estrai Dati
-            if action == 0:
+            elif action == 1:
                 estrattore_dati()
 
             # Valuta Severity Evento
-            elif action == 1:
+            elif action == 2:
                 severity_evaluator()
 
             # Verifica host in blacklist
-            elif action == 2:
+            elif action == 3:
                 print "\n"
                 menu = ["Poller", "One-Shot"]
                 action = print_action_menu(menu)
 
                 if action == 0:
                     refresh_rate = raw_input("\n[*] Inserisci un refresh-rate [Minuti]:\n"
-                                             "\n>> ")
+                                             "\n  >> ")
 
                     try:
                         int(refresh_rate)
@@ -815,8 +841,11 @@ if __name__ == "__main__":
 
                     counter = 1
 
+                    popup = raw_input("\n[*] Abilitare pop-up di notifica? (sconsigliato per polling notturni) [S/n]\n"
+                                      "\n>> ")
+
                     while True:
-                        # Scommentare per debug:
+                        # Scommentare per abilitare debug, quindi commentare sotto:
                         '''
                         print "\n.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-." \
                               "\n[*] {}/{}/{} - {}:{} | Iterazione [{}]:\n".format(datetime.now().day, datetime.now().month,
@@ -833,13 +862,14 @@ if __name__ == "__main__":
                         # Commentare per abilitare debug
                         res, labels = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
                         if res:
-                            nfs(refresh_rate, res, labels)
-                            now = datetime.now()
-                            title = "[!] SECURITY ALERT [!]"
-                            msg = "Rilevata attività per l'IP: {}\n" \
-                                  "Label: {}\n" \
-                                  "Timestamp: {}".format(", ".join(res), ", ".join(labels), now.strftime("%d/%m/%Y %H:%M:%S"))
-                            msgbox(msg, title, ok_button="Chiudi")
+                            nfs(refresh_rate, res, labels, "Blacklist Poller")
+                            if popup == "S" or popup == "s":
+                                now = datetime.now()
+                                title = "[!] SECURITY ALERT [!]"
+                                msg = "Rilevata attività per l'IP: {}\n" \
+                                      "Label: {}\n" \
+                                      "Timestamp: {}".format(", ".join(res), ", ".join(labels), now.strftime("%d/%m/%Y %H:%M:%S"))
+                                msgbox(msg, title, ok_button="Chiudi")
                         ### ### ### ### ### ### ### ### ### ###
 
                         try:
@@ -858,19 +888,19 @@ if __name__ == "__main__":
                     web_resource_crawler(True)
 
             # Verifica Subnet
-            elif action == 3:
+            elif action == 4:
                 whois_responder(False)
 
             # Whois Resolver
-            elif action == 4:
+            elif action == 5:
                 whois_responder(True)
 
             # Configurazioni
-            elif action == 5:
+            elif action == 6:
                 confManagement()
 
             # Chiudi
-            elif action == 6:
+            elif action == 7:
                 exit(0)
         except:
             print "\n[!] Qualcosa è andato storto! Hai configurato correttamente il toolkit?\n"
