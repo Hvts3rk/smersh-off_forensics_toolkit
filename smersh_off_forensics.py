@@ -4,9 +4,9 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 4.0.0
+    Version: 4.1.0
     Created: 02/2020
-    Modified: 24/04/2020
+    Modified: 27/04/2020
     Python: 2.7
     ToDo: un po di colorito non farebbe male! :)
 '''
@@ -112,7 +112,7 @@ def web_resource_crawler(check=False, provided=False, addr=[], poller=False, ref
         csv_url = []
 
         for ip in indirizzo:
-            if ip.startswith("#"):
+            if ip.startswith("#") or ip == "":
                 pass
             else:
                 csv_url.append(basic_path + csv_path_rel + ip.replace('*',
@@ -687,7 +687,7 @@ def confManagement():
     while inside:
 
         menu = ['Blacklist Management [ADD IP]', 'Blacklist Management [REMOVE IP]', 'Blacklist Management [SHOW IP]',
-                'Update Session Token', "Indietro"]
+                'Update Session Token', "Rinomina File Estrazioni", "Indietro"]
         print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
         print u'\n[*] Menù:\n'
         action = print_action_menu(menu)
@@ -780,8 +780,37 @@ def confManagement():
 
             print "\n[*] Config file aggiornato con successo!"
 
-        # Indietro
+        # Rinomina File Estrazioni
         elif action == 4:
+
+            kind = ['Automated SQL Injection', 'nMap Scanning', 'Manual Vulnerability Probing',
+                    'Automated Vulnerability '
+                    'Probing', 'Spidering Events']
+
+            print '\n[*] Scegli il vettore d\'attacco:\n'
+            choose = print_action_menu(kind)
+
+            desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+            gen_path = desktop_path + "\\Estrazioni_Elaborate"
+
+            import Tkinter
+            import tkFileDialog
+            root = Tkinter.Tk()
+            filez = tkFileDialog.askopenfilenames(parent=root, title='Scegli i file da analizzare', initialdir=gen_path)
+            files_list = root.tk.splitlist(filez)
+
+            try:
+                for x in files_list:
+                    new_file_name = x.replace("[AUTO-GENERATED-REPORT]",kind[int(choose)])
+                    os.rename(x,new_file_name.replace(" ", "_"))
+            except:
+                print "\n[!] Qualcosa è andato storto!"
+                inside = False
+
+            print"\n[*] File rinominati con successo!"
+
+        # Indietro
+        elif action == 5:
             inside = False
 
 
@@ -790,7 +819,7 @@ if __name__ == "__main__":
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics ToolKit")
     print banner
-    print "              Developed by Giorgio Rando  -  v4.0.0"
+    print "              Developed by Giorgio Rando  -  v4.1.0"
 
     while 1:
         menu = ["Smersh-On Poller", 'Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
@@ -827,6 +856,7 @@ if __name__ == "__main__":
                 menu = ["Poller", "One-Shot"]
                 action = print_action_menu(menu)
 
+                # Poller
                 if action == 0:
                     refresh_rate = raw_input("\n[*] Inserisci un refresh-rate [Minuti]:\n"
                                              "\n  >> ")
@@ -837,11 +867,15 @@ if __name__ == "__main__":
                         print "[!] Valore di refresh rate non valido!"
                         break
 
+                    u = raw_input("\n[*] Autenticazione richiesta.\n"
+                                  "\nUser: ")
+                    p = getpass.getpass("Password: ")
+
                     print "\n[!] Premere 'Ctrl + C' in qualsiasi momento per interrompere il polling.\n"
 
                     counter = 1
 
-                    popup = raw_input("\n[*] Abilitare pop-up di notifica? (sconsigliato per polling notturni) [S/n]\n"
+                    popup = raw_input("\n[*] Abilitare pop-up di notifica? (sconsigliato) [S/n]\n"
                                       "\n>> ")
 
                     while True:
@@ -862,9 +896,10 @@ if __name__ == "__main__":
                         # Commentare per abilitare debug
                         res, labels = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
                         if res:
-                            nfs(refresh_rate, res, labels, "Blacklist Poller")
+                            now = datetime.now()
+                            print "\n[!]Timestamp: {}".format(now.strftime("%d/%m/%Y %H:%M:%S"))
+                            nfs(refresh_rate, res, labels, "Blacklist Poller", u=u, p=p)
                             if popup == "S" or popup == "s":
-                                now = datetime.now()
                                 title = "[!] SECURITY ALERT [!]"
                                 msg = "Rilevata attività per l'IP: {}\n" \
                                       "Label: {}\n" \
@@ -884,6 +919,7 @@ if __name__ == "__main__":
 
                         counter += 1
 
+                # One-Shot
                 elif action == 1:
                     web_resource_crawler(True)
 
