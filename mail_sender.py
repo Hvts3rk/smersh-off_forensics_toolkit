@@ -4,7 +4,7 @@ import smtplib
 import time
 import os
 
-def notify_service(intervallo, ip, labels, kind):
+def notify_service(intervallo, ip, labels, kind, u="", p=""):
 
     folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_mail_setting.txt"
     done = False
@@ -40,14 +40,35 @@ def notify_service(intervallo, ip, labels, kind):
                     labels.append(listato[idx-1])
                     break
                 elif idx+1 == len(listato):
-                    labels.append("NUOVO IP")
+                    # Mi ricavo il net name tramite whois:
+                    from ipwhois import IPWhois
+                    import urllib2
+
+                    folder = os.path.join(os.path.join(os.environ['USERPROFILE']),
+                                          'Documents') + "\\smersh_extractor_keywords.txt"
+                    with open(folder, mode="r") as file:
+                        config_file = file.read().splitlines()
+
+                    handler = urllib2.ProxyHandler({'http': 'http://' + u + ':' + p + '@' + config_file[11]})
+                    try:
+                        opener = urllib2.build_opener(handler)
+                        obj = IPWhois(add, proxy_opener=opener)
+                        results = obj.lookup_rws()
+
+                        netname = results["nets"][0]["name"]
+                    except:
+                        netname = "## INDIRIZZO NON RISOLTO!"
+
+                    labels.append("# " + netname)
+                    #labels.append("NUOVO IP")
 
                     # Quindi aggiungiamoli alla blacklist se dopo averla scorsa tutta non trovo corrispondenze
-                    label = "# NUOVO - DA VERIFICARE"
+                    #label = "# NUOVO - DA VERIFICARE"
+
                     blck = os.path.join(os.path.join(os.environ['USERPROFILE']),'Documents') + "\\smersh_blacklist.txt"
                     try:
                         with open(blck, mode="a") as blacklist:
-                            blacklist.write("\n#" + label)
+                            blacklist.write("\n# " + netname)
                             blacklist.write("\n" + add)
                             print "\n[*] Blacklist file aggiornata con successo!"
                     except:

@@ -69,7 +69,7 @@ def online_poller(rr):
             else:
                   break
 
-      popup = raw_input("\n[*] Abilitare pop-up di notifica? (sconsigliato per polling notturni) [S/n]\n"
+      popup = raw_input("\n[*] Abilitare pop-up di notifica? (sconsigliato) [S/n]\n"
                         "\n>> ")
 
       print "\n[!] Premere 'Ctrl + C' in qualsiasi momento per interrompere il polling.\n"
@@ -109,7 +109,7 @@ def online_poller(rr):
                               print u"\n[!] Rilevata attività illecita per l'IP: {}" \
                                     "\n    Timestamp: {}".format(ip, timestamp)
 
-                        nfs((intervallo/60), ips, [], "Smersh-On Poller")
+                        nfs((intervallo/60), ips, [], "Smersh-On Poller", u=u, p=p)
 
                         if popup == "S" or popup == "s":
                               title = "[!] SECURITY ALERT [!]"
