@@ -15,6 +15,7 @@ from mail_sender import notify_service as nfs
 from ipwhois import IPWhois as ipw
 from tkinter.filedialog import *
 from datetime import datetime
+from os import listdir
 from easygui import *
 import ThreaderWorker as tw
 import pyfiglet
@@ -680,17 +681,74 @@ def whois_responder(plot):
         subnet_analyser(ranges)
 
 
+def clean_false_positive():
+    false_positive_lists = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') + "\\Estrazioni_Elaborate\\falsi_positivi"
+
+    if not os.path.exists(false_positive_lists):
+        os.mkdir(false_positive_lists)
+        print "\n[!] Cartella vuota!"
+        return None
+
+    files_in_dir = listdir(false_positive_lists)
+
+    if not files_in_dir:
+        print "\n[*] Directory falsi positivi vuota, skip."
+    else:
+        for file in files_in_dir:
+            ip = file.split("_")[:4]
+            ip = ".".join(ip)
+            try:
+                confManagement(1, ip, True)
+                os.remove(false_positive_lists + "\\" + file)
+            except:
+                print "\n\t[!] Impossibile rimuovere l'IP {} da Blacklistfile!".format(ip)
+
+        print "\n[*] Blacklist aggiornata con successo!"
+
+def quick_file_rename():
+
+    directory_files = os.path.join(os.path.join(os.environ['USERPROFILE']),'Desktop') + "\\Estrazioni_Elaborate"
+    dirs = [directory_files + "\\automated", directory_files + "\\manual", directory_files + "\\spidering"]
+
+    new_file_name = "[AUTO-GENERATED-REPORT]"
+
+    for x in dirs:
+        if not os.path.exists(x):
+            os.mkdir(x)
+
+    for idx, file in enumerate(dirs):
+        files = listdir(file)
+        for elem in files:
+            if idx == 0 and "[AUTO-GENERATED-REPORT]" in elem :
+                new_file_name = elem.replace("[AUTO-GENERATED-REPORT]", 'Automated_Vulnerability_Probing')
+            elif idx == 1 and "[AUTO-GENERATED-REPORT]" in elem:
+                new_file_name = elem.replace("[AUTO-GENERATED-REPORT]", 'Manual_Vulnerability_Probing')
+            elif idx == 2 and "[AUTO-GENERATED-REPORT]" in elem:
+                new_file_name = elem.replace("[AUTO-GENERATED-REPORT]", 'Spidering_Event')
+            else:
+                continue
+
+            file_path = file + "\\" + elem
+            try:
+                os.rename(file_path, file + "\\" + new_file_name)
+            except:
+                print "\n[!] Qualcosa è andato storto con il rename del file: {}".format(file_path)
+
+    print "\n[*] Extracted_files rinominati con successo!"
+
+
 # Configuratore pratico per file di config locali
-def confManagement():
+def confManagement(action = None, choose = None, automated = False):
     inside = True
 
     while inside:
 
-        menu = ['Blacklist Management [ADD IP]', 'Blacklist Management [REMOVE IP]', 'Blacklist Management [SHOW IP]',
-                'Update Session Token', "Rinomina File Estrazioni", "Indietro"]
-        print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
-        print u'\n[*] Menù:\n'
-        action = print_action_menu(menu)
+        if not action:
+            menu = ['[ADD IP] Blacklist Management', '[REMOVE IP] Blacklist Management', '[SHOW IP] Blacklist Management',
+                    "[AUTOMAZIONE] Rinomina auto estrazioni + Clean Falsi Positivi da Blacklist", "Update Auth Token", "Indietro"]
+            print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
+            print u'\n[*] Menù:\n'
+            action = print_action_menu(menu)
 
         # Add IP
         if action == 0:
@@ -714,22 +772,29 @@ def confManagement():
         elif action == 1:
 
             folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
-            print "\n"
 
             with open(folder, mode="r") as file:
                 content = file.read().splitlines()
-                for ida, addr in enumerate(content):
-                    if not addr.startswith("#"):
-                        print "{}) {}".format(ida, addr)
-                    else:
-                        print addr
 
-            choose = raw_input("\n[+] Scegli l'indice dell'IP da rimuovere:\n> ")
-            try:
-                choose = int(choose)
-            except:
-                print "\n[!] Indice inserito non valido!\n"
-                return None
+                if not choose:
+                    print "\n"
+                    for ida, addr in enumerate(content):
+                        if not addr.startswith("#"):
+                            print "{}) {}".format(ida, addr)
+                        else:
+                            print addr
+
+                    choose = raw_input("\n[+] Scegli l'indice dell'IP da rimuovere:\n> ")
+                    try:
+                        choose = int(choose)
+                    except:
+                        print "\n[!] Indice inserito non valido!\n"
+                        return None
+                else:
+                    for ida, addr in enumerate(content):
+                        if str(choose) in addr:
+                            choose = ida
+                            break
 
             # Rimuovo l'IP
             del content[choose]
@@ -744,7 +809,11 @@ def confManagement():
                 print "\n[!] Qualcosa è andato storto."
                 inside = False
 
-            print "\n[*] Blacklist file aggiornata con successo!"
+            if automated:
+                inside = False
+            else:
+                print "\n[*] Blacklist file aggiornata con successo!"
+
 
         # Show IPs
         elif action == 2:
@@ -759,8 +828,8 @@ def confManagement():
                     else:
                         print addr
 
-        # Bearer Management
-        elif action == 3:
+        # Auth Token Management
+        elif action == 4:
 
             session = raw_input("\n[+] Inserisci il Bearer aggiornato:\n> ")
 
@@ -780,34 +849,15 @@ def confManagement():
 
             print "\n[*] Config file aggiornato con successo!"
 
-        # Rinomina File Estrazioni
-        elif action == 4:
-
-            kind = ['Automated SQL Injection', 'nMap Scanning', 'Manual Vulnerability Probing',
-                    'Automated Vulnerability '
-                    'Probing', 'Spidering Events']
-
-            print '\n[*] Scegli il vettore d\'attacco:\n'
-            choose = print_action_menu(kind)
-
-            desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
-            gen_path = desktop_path + "\\Estrazioni_Elaborate"
-
-            import Tkinter
-            import tkFileDialog
-            root = Tkinter.Tk()
-            filez = tkFileDialog.askopenfilenames(parent=root, title='Scegli i file da analizzare', initialdir=gen_path)
-            files_list = root.tk.splitlist(filez)
-
+        # Automazione rinominazione + clean falsi positivi
+        elif action == 3:
             try:
-                for x in files_list:
-                    new_file_name = x.replace("[AUTO-GENERATED-REPORT]",kind[int(choose)])
-                    os.rename(x,new_file_name.replace(" ", "_"))
+                clean_false_positive()
+                quick_file_rename()
+                action = None
             except:
-                print "\n[!] Qualcosa è andato storto!"
+                print "\n\t[!] Qualcosa è andato storto con l'automazione!"
                 inside = False
-
-            print"\n[*] File rinominati con successo!"
 
         # Indietro
         elif action == 5:
