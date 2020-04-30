@@ -390,7 +390,7 @@ def print_action_menu(entry):
 
 
 # Funzione per l'estrazione dei dati dai log grezzi alla conversione pulita
-def estrattore_dati(choose="",ips="", intervallo=None, verbose=True):
+def estrattore_dati(choose="",ips="", intervallo=None, verbose=True, save_path=""):
 
     kind = ['Automated SQL Injection', 'nMap Scanning', 'Manual Vulnerability Probing', 'Automated Vulnerability '
                                                                                         'Probing', 'Spidering Events',
@@ -419,12 +419,10 @@ def estrattore_dati(choose="",ips="", intervallo=None, verbose=True):
         ########## Preleva il file da Graylog!
         file_path = web_resource_crawler(ips=ips, time_type_end="0", defined_seconds=intervallo, verbose=verbose)
 
-    desktop_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
-    save_path = (desktop_path + "\\Estrazioni_Elaborate")
-    if os.path.exists(save_path):
-        pass
-    else:
-        os.mkdir(save_path)
+    if not save_path:
+        save_path = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') + "\\Estrazioni_Elaborate"
+        if not os.path.exists(save_path):
+            os.mkdir(save_path)
 
     if verbose:
         print "\n[!] Directory di assemblamento: {}".format(save_path)
@@ -682,7 +680,7 @@ def whois_responder(plot):
 
 
 def clean_false_positive():
-    false_positive_lists = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') + "\\Estrazioni_Elaborate\\falsi_positivi"
+    false_positive_lists = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') + "\\Estrazioni_Elaborate\\classificatori\\falsi_positivi"
 
     if not os.path.exists(false_positive_lists):
         os.mkdir(false_positive_lists)
@@ -708,7 +706,7 @@ def clean_false_positive():
 def quick_file_rename():
 
     directory_files = os.path.join(os.path.join(os.environ['USERPROFILE']),'Desktop') + "\\Estrazioni_Elaborate"
-    dirs = [directory_files + "\\automated", directory_files + "\\manual", directory_files + "\\spidering"]
+    dirs = [directory_files + "\\classificatori\\automated", directory_files + "\\classificatori\\manual", directory_files + "\\classificatori\\spidering"]
 
     new_file_name = "[AUTO-GENERATED-REPORT]"
 

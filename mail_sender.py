@@ -6,11 +6,14 @@ import os
 
 def notify_service(intervallo, ip, labels, kind, u="", p=""):
 
-    folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_mail_setting.txt"
+    blck = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
+    mail_setting = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_mail_setting.txt"
+    keywords = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
+
     done = False
     while not done:
         try:
-            with open(folder, mode="r") as file:
+            with open(mail_setting, mode="r") as file:
                 content = file.read().split("|")
             done = True
         except:
@@ -22,11 +25,10 @@ def notify_service(intervallo, ip, labels, kind, u="", p=""):
     timestamp = now.strftime("%d/%m/%Y %H:%M:%S")
 
     if not labels:
-        folder = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
         fatto = False
         while not fatto:
             try:
-                with open(folder, mode='r') as file:
+                with open(blck, mode='r') as file:
                     listato = file.read().splitlines()
                 fatto = True
             except:
@@ -44,9 +46,7 @@ def notify_service(intervallo, ip, labels, kind, u="", p=""):
                     from ipwhois import IPWhois
                     import urllib2
 
-                    folder = os.path.join(os.path.join(os.environ['USERPROFILE']),
-                                          'Documents') + "\\smersh_extractor_keywords.txt"
-                    with open(folder, mode="r") as file:
+                    with open(keywords, mode="r") as file:
                         config_file = file.read().splitlines()
 
                     handler = urllib2.ProxyHandler({'http': 'http://' + u + ':' + p + '@' + config_file[11]})
@@ -65,7 +65,6 @@ def notify_service(intervallo, ip, labels, kind, u="", p=""):
                     # Quindi aggiungiamoli alla blacklist se dopo averla scorsa tutta non trovo corrispondenze
                     #label = "# NUOVO - DA VERIFICARE"
 
-                    blck = os.path.join(os.path.join(os.environ['USERPROFILE']),'Documents') + "\\smersh_blacklist.txt"
                     try:
                         with open(blck, mode="a") as blacklist:
                             blacklist.write("\n# " + netname)
@@ -78,7 +77,19 @@ def notify_service(intervallo, ip, labels, kind, u="", p=""):
         # Infine estraiamo i dati generati dagli IP Segnalati...
         try:
             from smersh_off_forensics import estrattore_dati
-            estrattore_dati(choose="5", ips=add, intervallo=(86400), verbose=False)
+
+            with open(blck, "r") as file:
+                listone = file.read().splitlines()
+
+            dest = [listone[idx-1] for idx, x in enumerate(listone) if add in x]
+            dest = dest[0].replace("#","").replace(" ", "")
+            folder_estrazione = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') + "\\Estrazioni_Elaborate\\" + dest
+
+            if not os.path.exists(folder_estrazione):
+                os.makedirs(folder_estrazione)
+
+            estrattore_dati(choose="5", ips=add, intervallo=(86400), verbose=False, save_path=folder_estrazione)
+
             print "\n[*] Estrazioni report avvenuta con successo!"
         except:
             print"\n[!] Qualcosa è andato storto con il dump delle attività degli IP segnalati."
