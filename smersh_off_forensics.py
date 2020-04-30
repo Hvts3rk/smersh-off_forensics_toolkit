@@ -4,7 +4,7 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 4.1.0
+    Version: 4.2.0
     Created: 02/2020
     Modified: 27/04/2020
     Python: 2.7
@@ -867,7 +867,7 @@ if __name__ == "__main__":
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics ToolKit")
     print banner
-    print "              Developed by Giorgio Rando  -  v4.1.0"
+    print "              Developed by Giorgio Rando  -  v4.2.0"
 
     while 1:
         menu = ["Smersh-On Poller", 'Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
