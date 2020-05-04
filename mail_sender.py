@@ -1,4 +1,5 @@
 # coding=utf-8
+import traceback
 from datetime import datetime
 import smtplib
 import time
@@ -71,7 +72,8 @@ def notify_service(intervallo, ip, labels, kind, u="", p=""):
                             blacklist.write("\n" + add)
                             print "\n[*] Blacklist file aggiornata con successo!"
                     except:
-                        print "\n[!] Qualcosa è andato storto nell'aggiornamento della blacklist!"
+                        print u"\n[!] Qualcosa è andato storto nell'aggiornamento della blacklist!"
+                        traceback.print_stack()
 
     for add in ip:
         # Infine estraiamo i dati generati dagli IP Segnalati...
@@ -92,7 +94,8 @@ def notify_service(intervallo, ip, labels, kind, u="", p=""):
 
             print "\n[*] Estrazioni report avvenuta con successo!"
         except:
-            print"\n[!] Qualcosa è andato storto con il dump delle attività degli IP segnalati."
+            print u"\n[!] Qualcosa è andato storto con il dump delle attività degli IP segnalati."
+            traceback.print_stack()
             return None
 
     sender = content[0]

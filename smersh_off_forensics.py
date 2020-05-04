@@ -4,12 +4,14 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 4.2.0
+    Version: 4.2.1
     Created: 02/2020
     Modified: 27/04/2020
     Python: 2.7
     ToDo: un po di colorito non farebbe male! :)
 '''
+import traceback
+
 from online_smersh_poller import online_poller as op
 from mail_sender import notify_service as nfs
 from ipwhois import IPWhois as ipw
@@ -377,6 +379,7 @@ def intVerification(val, length):
             return True
     except:
         print '\n No correct value!'
+        traceback.print_stack()
         exit(0)
 
 
@@ -846,6 +849,7 @@ def confManagement(action = None, choose = None, automated = False):
                 return None
 
             print "\n[*] Config file aggiornato con successo!"
+            action = None
 
         # Automazione rinominazione + clean falsi positivi
         elif action == 3:
@@ -867,7 +871,7 @@ if __name__ == "__main__":
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics ToolKit")
     print banner
-    print "              Developed by Giorgio Rando  -  v4.2.0"
+    print "              Developed by Giorgio Rando  -  v4.2.1"
 
     while 1:
         menu = ["Smersh-On Poller", 'Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
@@ -914,7 +918,7 @@ if __name__ == "__main__":
                     except:
                         print "[!] Valore di refresh rate non valido!"
                         break
-
+                    
                     u = raw_input("\n[*] Autenticazione richiesta.\n"
                                   "\nUser: ")
                     p = getpass.getpass("Password: ")
@@ -987,6 +991,7 @@ if __name__ == "__main__":
             elif action == 7:
                 exit(0)
         except:
-            print "\n[!] Qualcosa è andato storto! Hai configurato correttamente il toolkit?\n"
+            print u"\n[!] Qualcosa è andato storto! Hai configurato correttamente il toolkit?\n"
+            traceback.print_stack()
             raw_input("\nPremi qualsiasi tasto per concludere:\n  >> ")
             exit(0)

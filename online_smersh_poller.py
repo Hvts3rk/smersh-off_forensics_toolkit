@@ -52,6 +52,7 @@ def online_poller(rr):
             usr = webdriver.find_element_by_xpath("/html/body/div/div/div/div/div/form/div[1]/span/input")
             pwd = webdriver.find_element_by_xpath("/html/body/div/div/div/div/div/form/div[2]/span/input")
 
+
             u = raw_input("\n[*] Autenticazione richiesta.\n"
                           "\nUser: ")
             p = getpass.getpass("Password: ")
