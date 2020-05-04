@@ -746,7 +746,7 @@ def confManagement(action = None, choose = None, automated = False):
 
         if not action:
             menu = ['[ADD IP] Blacklist Management', '[REMOVE IP] Blacklist Management', '[SHOW IP] Blacklist Management',
-                    "[AUTOMAZIONE] Rinomina auto estrazioni + Clean Falsi Positivi da Blacklist", "Update Auth Token", "Indietro"]
+                    "[AUTOMAZIONE] Rinomina auto estrazioni + Clean Falsi Positivi da Blacklist", "[DEPRECATO] Update Auth Token", "Indietro"]
             print "\n.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
             print u'\n[*] Menù:\n'
             action = print_action_menu(menu)
@@ -832,7 +832,8 @@ def confManagement(action = None, choose = None, automated = False):
         # Auth Token Management
         elif action == 4:
 
-            session = raw_input("\n[+] Inserisci il Bearer aggiornato:\n> ")
+            session = raw_input("\n[!] Con poller attivi Bearer si aggiorna automaticamente ogni 6 ore!\n"
+                                "\n[+] Inserisci il Bearer aggiornato:\n> ")
 
             folder = os.path.join(os.path.join(os.environ['USERPROFILE']),
                                   'Documents') + "\\smersh_extractor_keywords.txt"

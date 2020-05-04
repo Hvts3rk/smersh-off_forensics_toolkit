@@ -1,15 +1,53 @@
 # coding=utf-8
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
+from base64 import b64encode
+import requests
 import smtplib
 import time
+import json
 import os
+
+def bearer_updater(u, p, file_path):
+    try:
+        import urllib3
+        urllib3.disable_warnings()
+
+        with open(file_path, mode="r") as file:
+            config_file = file.read().splitlines()
+
+        now = datetime.now()
+
+        login = {"username": u,
+                 "password": p}
+
+        header = {'X-Requested-With': 'XMLHttpRequest',
+                  'X-Requested-By': 'XMLHttpRequest'}
+
+        r = requests.post(config_file[14], json=login, headers=header, verify=False)
+
+        bearer = b64encode(json.loads(r.text.encode("utf-8"))['session_id'] + ":session")
+
+        config_file[9] = "Basic "+ bearer
+
+        config_file[15] = str(now)
+
+        with open(file_path, mode="w") as new_file:
+            new_file.write("\n".join(config_file))
+
+        print "\n[*] Bearer Token aggiornato con Successo!"
+    except:
+        print u"\n[!] Errore durante l'aggiornamento del Bearer Token!"
+
 
 def notify_service(intervallo, ip, labels, kind, u="", p=""):
 
     blck = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_blacklist.txt"
     mail_setting = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_mail_setting.txt"
     keywords = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Documents') + "\\smersh_extractor_keywords.txt"
+
+    with open(keywords, mode="r") as file:
+        config_file = file.read().splitlines()
 
     done = False
     while not done:
@@ -46,9 +84,6 @@ def notify_service(intervallo, ip, labels, kind, u="", p=""):
                     # Mi ricavo il net name tramite whois:
                     from ipwhois import IPWhois
                     import urllib2
-
-                    with open(keywords, mode="r") as file:
-                        config_file = file.read().splitlines()
 
                     handler = urllib2.ProxyHandler({'http': 'http://' + u + ':' + p + '@' + config_file[11]})
                     try:
@@ -89,6 +124,10 @@ def notify_service(intervallo, ip, labels, kind, u="", p=""):
 
             if not os.path.exists(folder_estrazione):
                 os.makedirs(folder_estrazione)
+
+            # Se bearer non aggiornato nelle ultime 6 ore, allora aggiornalo
+            if not now - timedelta(hours=6) <= datetime.strptime(config_file[15], '%Y-%m-%d %H:%M:%S.%f') <= now:
+                bearer_updater(u,p, keywords)
 
             estrattore_dati(choose="5", ips=add, intervallo=(86400), verbose=False, save_path=folder_estrazione)
 
