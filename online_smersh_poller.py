@@ -31,6 +31,7 @@ def online_poller(rr):
       chrome_options = Options()
       chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
       chrome_options.add_argument('--headless')
+
       # Questo try è necessario per quando lancio lo script tramite launcher che è collocato dentro la cartella res
       try:
             webdriver = webdriver.Chrome(executable_path=chrome_driver_path, options=chrome_options)
@@ -98,13 +99,19 @@ def online_poller(rr):
 
                   #print webdriver.page_source
 
+                  # Se rileva degli IP all'interno della pagina delle segnalazioni, allora elabora il tutto
                   if ips:
                         from mail_sender import notify_service as nfs
+                        from smersh_off_forensics import bearer_updater as bu
                         from easygui import msgbox
-                        from datetime import datetime
+                        from datetime import datetime, timedelta
 
                         now = datetime.now()
                         timestamp = now.strftime("%d/%m/%Y %H:%M:%S")
+
+                        # Se bearer non aggiornato nelle ultime 6 ore, allora aggiornalo
+                        if not now - timedelta(hours=6) <= datetime.strptime(strings[15], '%Y-%m-%d %H:%M:%S.%f') <= now:
+                              bu(u, p, conf)
 
                         for ip in ips:
                               print u"\n[!] Rilevata attività illecita per l'IP: {}" \

@@ -4,14 +4,15 @@
 '''
     Filename: smersh_off_forensics.py
     Author: Giorgio Rando
-    Version: 4.2.1
+    Version: 4.2.2
     Created: 02/2020
-    Modified: 27/04/2020
+    Modified: 11/05/2020
     Python: 2.7
     ToDo: un po di colorito non farebbe male! :)
 '''
+import json
 import traceback
-
+from base64 import b64encode
 from online_smersh_poller import online_poller as op
 from mail_sender import notify_service as nfs
 from ipwhois import IPWhois as ipw
@@ -383,6 +384,7 @@ def intVerification(val, length):
         exit(0)
 
 
+# Funzione basica per il quick print dei menu contestuali
 def print_action_menu(entry):
     for id, i in enumerate(entry):
         print '{}) {}'.format(id, i)
@@ -390,6 +392,39 @@ def print_action_menu(entry):
 
     if intVerification(action, len(entry)):
         return int(action)
+
+
+# Funzione per l'update automatico del bearer token quando scade il timeout delle 6 ore
+def bearer_updater(u, p, file_path):
+    try:
+        import urllib3
+        urllib3.disable_warnings()
+
+        with open(file_path, mode="r") as file:
+            config_file = file.read().splitlines()
+
+        now = datetime.now()
+
+        login = {"username": u,
+                 "password": p}
+
+        header = {'X-Requested-With': 'XMLHttpRequest',
+                  'X-Requested-By': 'XMLHttpRequest'}
+
+        r = requests.post(config_file[14], json=login, headers=header, verify=False)
+
+        bearer = b64encode(json.loads(r.text.encode("utf-8"))['session_id'] + ":session")
+
+        config_file[9] = "Basic " + bearer
+
+        config_file[15] = str(now)
+
+        with open(file_path, mode="w") as new_file:
+            new_file.write("\n".join(config_file))
+
+        print "\n[*] Bearer Token aggiornato con Successo!"
+    except:
+        print u"\n[!] Errore durante l'aggiornamento del Bearer Token!"
 
 
 # Funzione per l'estrazione dei dati dai log grezzi alla conversione pulita
@@ -682,6 +717,7 @@ def whois_responder(plot):
         subnet_analyser(ranges)
 
 
+# Funzione per il quick remove degli elementi locati dentro la cartella dei falsi positivi e la loro rimozione dalla blacklist
 def clean_false_positive():
     false_positive_lists = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') + "\\Estrazioni_Elaborate\\classificatori\\falsi_positivi"
 
@@ -706,6 +742,8 @@ def clean_false_positive():
 
         print "\n[*] Blacklist aggiornata con successo!"
 
+
+# Funzione per il quickrename necessario nel momento in cui si ha la necessità di rinominare estrazioni automatiche
 def quick_file_rename():
 
     directory_files = os.path.join(os.path.join(os.environ['USERPROFILE']),'Desktop') + "\\Estrazioni_Elaborate"
@@ -872,7 +910,7 @@ if __name__ == "__main__":
     print ".-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#.-*#"
     banner = pyfiglet.figlet_format("Smersh-Off \n Forensics ToolKit")
     print banner
-    print "              Developed by Giorgio Rando  -  v4.2.1"
+    print "              Developed by Giorgio Rando  -  v4.2.2"
 
     while 1:
         menu = ["Smersh-On Poller", 'Estrai Dati', 'Valuta Severity Evento', 'Verifica Host in Blacklist', 'Verifica Subnet',
@@ -946,8 +984,20 @@ if __name__ == "__main__":
                             title = "[!] SECURITY ALERT [!]"
                             msg = "Rilevata attività per l'IP: {}\nLabel: {}".format(", ".join(res), ", ".join(labels))
                             msgbox(msg, title, ok_button="Chiudi")'''
-                        # Commentare per abilitare debug
+                        # Commentare per abilitare invece debug
+                        # Aggiorno bearer token se sono passate almeno 6 ore
+                        from datetime import timedelta
+                        now = datetime.now()
+
+                        conf = os.path.join(os.path.join(os.environ['USERPROFILE']),
+                                            'Documents') + "\\smersh_extractor_keywords.txt"
+                        with open(conf, mode="r") as file:
+                            strings = file.read().splitlines()
+
+                        if not now - timedelta(hours=6) <= datetime.strptime(strings[15], '%Y-%m-%d %H:%M:%S.%f') <= now:
+                              bearer_updater(u, p, conf)
                         res, labels = web_resource_crawler(True, poller=True, refresh_rate=int(refresh_rate))
+
                         if res:
                             now = datetime.now()
                             print "\n[!]Timestamp: {}".format(now.strftime("%d/%m/%Y %H:%M:%S"))
