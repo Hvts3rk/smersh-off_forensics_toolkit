@@ -804,7 +804,7 @@ def confManagement(action = None, choose = None, automated = False):
             except:
                 print "\n[!] Qualcosa è andato storto!"
                 inside = False
-
+            action = None
             print "\n[*] Blacklist file aggiornata con successo!"
 
         # Remove IP
@@ -851,8 +851,8 @@ def confManagement(action = None, choose = None, automated = False):
             if automated:
                 inside = False
             else:
+                action = None
                 print "\n[*] Blacklist file aggiornata con successo!"
-
 
         # Show IPs
         elif action == 2:
@@ -866,6 +866,8 @@ def confManagement(action = None, choose = None, automated = False):
                         print "{}) {}".format(ida, addr)
                     else:
                         print addr
+
+            action = None
 
         # Auth Token Management
         elif action == 4:
