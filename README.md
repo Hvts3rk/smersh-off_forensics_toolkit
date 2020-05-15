@@ -27,6 +27,12 @@ of alerts issued by Smersh (SIEM graduation project). This toolkit consists in a
 to assist the SOC Analyst in understanding the entities in place and in the intersection of
 apparently disconnected situations.
 
+### Meta
+* Version: 4.2.2
+* Created: 02/2020
+* Modified: 11/05/2020
+* Python: 2.7
+
 ## Functions
 
  * Automatic Online Poller 
