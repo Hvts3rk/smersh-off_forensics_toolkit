@@ -43,7 +43,7 @@ singledispatch==3.4.0.3
 six==1.14.0
 soupsieve==1.9.5
 typing==3.7.4.1
-urllib3==1.25.8
+urllib3==1.26.5
 virtualenv==20.0.18
 virtualenv-clone==0.5.4
 xlrd==1.2.0
